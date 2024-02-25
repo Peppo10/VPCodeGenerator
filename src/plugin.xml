@@ -1,0 +1,21 @@
+<plugin
+    id="javaGenerator"
+    description="Plugin for generating java code from class diagram"
+    provider="uniba"
+    class="org.giuse.JavaGenerator.JavaGenerator" >
+    <actionSets>
+        <contextSensitiveActionSet id="javaGenerator.plugin.actions.ActionSet1">
+            <contextTypes all="false">
+                <include type="Class"/>
+                <include type="Package"/>
+                <include type="ClassDiagram"/>
+            </contextTypes>
+            <action
+                    id="javaGenerator.plugin.actions.ContextAction1"
+                    label="Generate Java Code"
+                    menuPath="OpenSpecification">
+                <actionController class="org.giuse.JavaGenerator.ActionController"/>
+            </action>
+        </contextSensitiveActionSet>
+</actionSets>
+</plugin>
