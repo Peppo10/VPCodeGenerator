@@ -14,7 +14,7 @@
                     id="javaGenerator.plugin.actions.ContextAction1"
                     label="Generate Java Code"
                     menuPath="OpenSpecification">
-                <actionController class="org.giuse.JavaGenerator.ActionController"/>
+                <actionController class="org.giuse.JavaGenerator.GenerateJavaActionController"/>
             </action>
         </contextSensitiveActionSet>
 </actionSets>

@@ -8,8 +8,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import static org.giuse.JavaGenerator.JavaGenerator.PLUGIN_NAME;
-import static org.giuse.JavaGenerator.JavaGenerator.viewManager;
+import static org.giuse.JavaGenerator.utils.Config.PLUGIN_NAME;
+import static org.giuse.JavaGenerator.utils.GUI.viewManager;
 
 public class Generator {
     public static void generate(Codebase codebase){

@@ -6,29 +6,34 @@ import com.vp.plugin.model.*;
 import org.giuse.JavaGenerator.parser.models.*;
 import org.giuse.JavaGenerator.parser.models.Class;
 import org.giuse.JavaGenerator.parser.models.Package;
+import org.giuse.JavaGenerator.utils.Config;
 import org.giuse.JavaGenerator.utils.FormatUtils;
-
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import static org.giuse.JavaGenerator.JavaGenerator.PLUGIN_NAME;
-import static org.giuse.JavaGenerator.JavaGenerator.viewManager;
+import static org.giuse.JavaGenerator.utils.Config.PLUGIN_NAME;
+import static org.giuse.JavaGenerator.utils.GUI.viewManager;
 
 public class Parser {
-    public static String DEFAULT_PATH = "C:\\Users\\giuse\\Desktop"; //TODO don't put in production
     Codebase codebase;
     private static Parser INSTANCE;
 
-    public static Parser getInstance(String name){
+    public static String DEFAULT_PATH;
+
+    public static Parser getInstance(String name, String choosePath){
+        //TODO Config.UpdateProperty("actions.generate_code.default_path",choosePath);
+
+        DEFAULT_PATH = choosePath;
+
         if(INSTANCE == null)
             INSTANCE = new Parser(name);
 
-        INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH+"\\"+name);
+        INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
 
-        return  INSTANCE;
+        return INSTANCE;
     }
 
     private Parser(String name){
-        this.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH+"\\"+name);
+        this.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
     }
 
     public Codebase getCodebase(){
