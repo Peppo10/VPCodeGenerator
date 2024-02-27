@@ -3,15 +3,15 @@ package org.giuse.JavaGenerator;
 import com.vp.plugin.action.VPAction;
 import com.vp.plugin.action.VPContext;
 import com.vp.plugin.action.VPContextActionController;
-import com.vp.plugin.diagram.IDiagramUIModel;
+import com.vp.plugin.diagram.IDiagramElement;
+import com.vp.plugin.diagram.shape.IClassUIModel;
+import com.vp.plugin.diagram.shape.IPackageUIModel;
 import com.vp.plugin.model.*;
 import org.giuse.JavaGenerator.generator.Generator;
 import org.giuse.JavaGenerator.parser.Parser;
-import org.giuse.JavaGenerator.utils.Config;
 import org.giuse.JavaGenerator.utils.GUI;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
 
 import static org.giuse.JavaGenerator.utils.GUI.viewManager;
 
@@ -23,38 +23,32 @@ public class GenerateJavaActionController implements VPContextActionController {
 
     @Override
     public void performAction(VPAction vpAction, VPContext vpContext, ActionEvent actionEvent) {
-        IModelElement modelElement = vpContext.getModelElement();
+        IDiagramElement diagramElement = vpContext.getDiagramElement();
+        IModelElement modelElement = diagramElement != null ? diagramElement.getModelElement() : null;
 
         JFileChooser fileChooser = GUI.createGeneratorFileChooser(TAG);
         if (fileChooser.showOpenDialog(viewManager.getRootFrame()) == JFileChooser.APPROVE_OPTION) {
 
-            String choosePath;
-            try {
-                choosePath = fileChooser.getSelectedFile().getCanonicalPath();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            String choosePath = fileChooser.getSelectedFile().getAbsolutePath();
 
             if(modelElement instanceof IClass){
                 Parser parser = Parser.getInstance(vpContext.getDiagram().getName(), choosePath);
 
                 if(modelElement.hasStereotype("Interface"))
-                    parser.parseSingleInterface((IClass) modelElement);
+                    parser.parseSingleInterface((IClassUIModel) vpContext.getDiagramElement());
                 else
-                    parser.parseSingleClass((IClass) modelElement);
+                    parser.parseSingleClass((IClassUIModel) vpContext.getDiagramElement());
 
                 Generator.generate(parser.getCodebase());
             } else if (modelElement instanceof IPackage) {
                 Parser parser = Parser.getInstance(vpContext.getDiagram().getName(), choosePath);
-                parser.parsePackage((IPackage) modelElement);
+                parser.parseSinglePackage((IPackageUIModel) vpContext.getDiagramElement());
                 Generator.generate(parser.getCodebase());
             } else{
                 Parser parser = Parser.getInstance(vpContext.getDiagram().getName(), choosePath);
                 parser.parseDiagram(vpContext.getDiagram());
                 Generator.generate(parser.getCodebase());
             }
-
-            GUI.showInformationMessageDialog(viewManager.getRootFrame(), TAG, "Code Generated Successfully");
         }
     }
 

@@ -4,6 +4,8 @@ import org.giuse.JavaGenerator.parser.models.Class;
 import org.giuse.JavaGenerator.parser.models.Codebase;
 import org.giuse.JavaGenerator.parser.models.Interface;
 import org.giuse.JavaGenerator.parser.models.Package;
+import org.giuse.JavaGenerator.utils.GUI;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,7 +14,11 @@ import static org.giuse.JavaGenerator.utils.Config.PLUGIN_NAME;
 import static org.giuse.JavaGenerator.utils.GUI.viewManager;
 
 public class Generator {
+    public static final String TAG = "Generator";
     public static void generate(Codebase codebase){
+        if(codebase.getClasses().contains(null) || codebase.getPackages().contains(null))
+            return;
+
         if(!new File(codebase.getPathname()).mkdirs()){
             viewManager.showMessage("folder "+codebase.getName()+" was not instanced(maybe already exists)", PLUGIN_NAME);
         }
@@ -27,6 +33,8 @@ public class Generator {
                 e.printStackTrace();
             }
         }
+
+        GUI.showInformationMessageDialog(viewManager.getRootFrame(), TAG, "Code Generated Successfully");
     }
 
     private static void generatePackage(Package aPackage){

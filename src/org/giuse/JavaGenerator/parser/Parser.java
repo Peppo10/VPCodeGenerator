@@ -1,19 +1,21 @@
 package org.giuse.JavaGenerator.parser;
-
-import com.vp.plugin.diagram.IDiagramElement;
-import com.vp.plugin.diagram.IDiagramUIModel;
+import com.vp.plugin.diagram.*;
+import com.vp.plugin.diagram.shape.IClassUIModel;
+import com.vp.plugin.diagram.shape.IPackageUIModel;
 import com.vp.plugin.model.*;
 import org.giuse.JavaGenerator.parser.models.*;
 import org.giuse.JavaGenerator.parser.models.Class;
 import org.giuse.JavaGenerator.parser.models.Package;
-import org.giuse.JavaGenerator.utils.Config;
 import org.giuse.JavaGenerator.utils.FormatUtils;
+import org.giuse.JavaGenerator.utils.GUI;
+import java.awt.*;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import static org.giuse.JavaGenerator.utils.Config.PLUGIN_NAME;
 import static org.giuse.JavaGenerator.utils.GUI.viewManager;
 
 public class Parser {
+    public static final String TAG = "Parser";
     Codebase codebase;
     private static Parser INSTANCE;
 
@@ -40,15 +42,17 @@ public class Parser {
         return this.codebase;
     }
 
-    private Struct parseClass(IClass iClass, String packagePath){
+    private Struct parseClass(IClassUIModel iClassUIModel, String packagePath){
         String optionalPackagePath;
+        IClass iClass = (IClass) iClassUIModel.getModelElement();
 
         if(packagePath == null){
-            IModelElement parent = iClass.getParent();
+            IDiagramElement parent = iClassUIModel.getParent();
+            IModelElement parentModel = parent != null ? parent.getModelElement() : null;
             Package parentPackage = null;
 
-            if( parent instanceof IPackage)
-                parentPackage = parsePackageBottomUp((IPackage) parent);
+            if(parentModel instanceof IPackage)
+                parentPackage = parsePackageBottomUp((IPackageUIModel) parent);
 
             optionalPackagePath = parentPackage != null ? parentPackage.getPathname() : codebase.getPathname();
         }
@@ -69,14 +73,20 @@ public class Parser {
         IRelationshipEnd[] relationshipsFrom = iClass.toFromRelationshipEndArray();
         IRelationshipEnd[] relationshipsTo = iClass.toToRelationshipEndArray();
         ITemplateParameter[] templateParameters = iClass.toTemplateParameterArray();
+        Color defaultColor = iClassUIModel.getFillColor().getColor1();
+        Color defaultError = new Color(255,0,0,255);
 
         for (IAttribute attribute : attributes) {
             Attribute parsedAttribute = parseAttribute(attribute);
 
             if(parsedAttribute != null)
                 builder.addAttribute(parsedAttribute);
-            else
+            else{
+                ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(attribute,true);
+                attributeColor.setBackground(defaultError);
+                attribute.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
                 return null;
+            }
         }
 
         for (IOperation operation : operations) {
@@ -88,8 +98,16 @@ public class Parser {
 
                 builder.addFunction(parsedFunction);
             }
-            else
+            else{
+                ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(operation,true);
+                attributeColor.setBackground(defaultError);
+
+                for(IParameter parameter :operation.toParameterArray())
+                    parameter.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+
+                operation.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
                 return null;
+            }
         }
 
         for(IRelationshipEnd relationship: relationshipsFrom){
@@ -97,8 +115,11 @@ public class Parser {
                 Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_FROM_TO);
                 if(parsedAssociation != null)
                     builder.addAttribute(parsedAssociation);
-                else
+                else{
+                    iClassUIModel.setForeground(defaultError);
+                    relationship.getEndRelationship().addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
                     return null;
+                }
             }
         }
 
@@ -107,8 +128,11 @@ public class Parser {
                 Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_TO_FROM);
                 if(parsedAssociation != null)
                     builder.addAttribute(parsedAssociation);
-                else
+                else{
+                    iClassUIModel.setForeground(defaultError);
+                    relationship.getEndRelationship().addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
                     return null;
+                }
             }
         }
 
@@ -124,7 +148,7 @@ public class Parser {
             return new Attribute(attribute.getVisibility(), formattedType, attribute.getName(), attribute.getInitialValue());
         }
         else{
-            viewManager.showMessage(attribute.getName() +" has null type", PLUGIN_NAME);
+            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, attribute.getName() +" has null type");
             return null;
         }
     }
@@ -145,7 +169,7 @@ public class Parser {
                     builderFunction.addParameter(new Attribute("", formattedType,parameter.getName(), null));
                 }
                 else{
-                    viewManager.showMessage("parameter " + parameter.getName() +" has null type", PLUGIN_NAME);
+                    GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, "parameter " + parameter.getName() +" has null type");
                     return null;
                 }
             }
@@ -153,7 +177,7 @@ public class Parser {
             return builderFunction.build();
         }
         else{
-            viewManager.showMessage(function.getName() +" has null return type", PLUGIN_NAME);
+            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, function.getName() +" has null return type");
             return null;
         }
     }
@@ -165,7 +189,7 @@ public class Parser {
         String associationName = association.getEndRelationship().getName();
 
         if(needsAssociationClass && (associationName == null || associationName.isEmpty())){
-            viewManager.showMessage("many to many association needs name -> " + associationName, PLUGIN_NAME);
+            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, "many to many association needs name");
             return null;
         }
 
@@ -184,7 +208,7 @@ public class Parser {
         }
 
         if(toMultiplicity.compareTo("Unspecified") == 0){
-            viewManager.showMessage(from.getName() + " has no multiplicity specified for " + to.getName(), PLUGIN_NAME);
+            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, from.getName() + " has no multiplicity specified for " + to.getName());
             return null;
         }
 
@@ -211,79 +235,94 @@ public class Parser {
         return new Attribute(scope, attributeType, attributeName.toLowerCase(), null);
     }
 
-    private Interface parseInterface(IClass iInterface, String packagePath){
+    private Interface parseInterface(IClassUIModel iInterface, String packagePath){
         return (Interface) parseClass(iInterface,packagePath);
     }
 
-    private void parsePackageTopDown(IPackage iPackage, Package parent){
-        Package aPackage = new Package(iPackage.getName(), new ArrayList<>(), parent.getPathname()+"\\"+iPackage.getName());
+    private void parsePackageTopDown(IPackageUIModel iPackage, Package parent){
+        Package aPackage = new Package(iPackage.getModelElement().getName(), new ArrayList<>(), parent.getPathname()+"\\"+iPackage.getModelElement().getName());
 
-        for(IModelElement iModelElement: iPackage.toChildArray()){
+        for(IShapeUIModel shapeUIModel: iPackage.toChildArray()){
+            IModelElement iModelElement = shapeUIModel.getModelElement();
             if(iModelElement instanceof IClass){
                 if(iModelElement.hasStereotype("Interface"))
-                    aPackage.addFile(parseInterface((IClass) iModelElement, aPackage.getPathname()));
+                    aPackage.addFile(parseInterface((IClassUIModel) shapeUIModel, aPackage.getPathname()));
                 else
-                    aPackage.addFile(parseClass((IClass) iModelElement, aPackage.getPathname()));
+                    aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
             } else if (iModelElement instanceof IPackage) {
-                parsePackageTopDown((IPackage) iModelElement, aPackage);
+                parsePackageTopDown((IPackageUIModel) shapeUIModel, aPackage);
             }
         }
 
         codebase.addPackage(aPackage);
     }
 
-    private Package parsePackageBottomUp(IPackage iPackage){
-        IModelElement parent =iPackage.getParent();
+    private Package parsePackageBottomUp(IPackageUIModel iPackage){
+        IDiagramElement parent = iPackage.getParent();
+        IModelElement modelParent = parent != null ? parent.getModelElement() : null;
 
         Package parentPackage = null;
 
-        if(parent instanceof IPackage)
-            parentPackage = parsePackageBottomUp((IPackage) parent);
+        if(modelParent instanceof IPackage)
+            parentPackage = parsePackageBottomUp((IPackageUIModel) parent);
 
         String optionalPackagePath = parentPackage != null ? parentPackage.getPathname() : codebase.getPathname();
 
-        Package aPackage = new Package(iPackage.getName(), new ArrayList<>(), optionalPackagePath+"\\"+iPackage.getName());
+        Package aPackage = new Package(iPackage.getModelElement().getName(), new ArrayList<>(), optionalPackagePath+"\\"+iPackage.getModelElement().getName());
 
         codebase.addPackage(aPackage);
 
         return aPackage;
     }
 
+    private Package parsePackage(IPackageUIModel iPackage){
+        Package aPackage = parsePackageBottomUp(iPackage);
+
+        for(IShapeUIModel shapeUIModel: iPackage.toChildArray()){
+            IModelElement iModelElement = shapeUIModel.getModelElement();
+            if(iModelElement instanceof IClass){
+                if(iModelElement.hasStereotype("Interface"))
+                    aPackage.addFile(parseInterface((IClassUIModel) shapeUIModel, aPackage.getPathname()));
+                else
+                    aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
+            } else if (iModelElement instanceof IPackage) {
+                parsePackageTopDown((IPackageUIModel) shapeUIModel, aPackage);
+            }
+        }
+
+        return aPackage.getFiles().contains(null) ? null : aPackage;
+    }
+
     public void parseDiagram(IDiagramUIModel iDiagramUIModel){
-        for(IDiagramElement iPackage: iDiagramUIModel.toDiagramElementArray()){
-            if(iPackage.getModelElement() instanceof IPackage)
-                parsePackage((IPackage) iPackage.getModelElement());
+        for(IShapeUIModel shapeUIModel: iDiagramUIModel.toShapeUIModelArray()){
+            IModelElement modelElement = shapeUIModel.getModelElement();
+
+            if(modelElement instanceof IPackage)
+                codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel));
+            else if(shapeUIModel.getModelElement() instanceof IClass){
+                if(modelElement.hasStereotype("Interface"))
+                    codebase.addFile(parseInterface((IClassUIModel) shapeUIModel, codebase.getPathname()));
+                else
+                    codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
+            }
         }
     }
 
-    public void parseSingleClass(IClass iClass){
+    public void parseSingleClass(IClassUIModel iClass){
         Class aClass = (Class) parseClass(iClass,null);
 
         codebase.addFile(aClass);
     }
 
-    public void parseSingleInterface(IClass iInterface){
+    public void parseSingleInterface(IClassUIModel iInterface){
         Interface anInterface = (Interface) parseClass(iInterface,null);
 
         codebase.addFile(anInterface);
     }
 
-    public Package parsePackage(IPackage iPackage){
-        Package aPackage = parsePackageBottomUp(iPackage);
-
-        for(IModelElement iModelElement: iPackage.toChildArray()){
-            if(iModelElement instanceof IClass){
-                if(iModelElement.hasStereotype("Interface"))
-                    aPackage.addFile(parseInterface((IClass) iModelElement, aPackage.getPathname()));
-                else
-                    aPackage.addFile(parseClass((IClass) iModelElement, aPackage.getPathname()));
-            } else if (iModelElement instanceof IPackage) {
-                parsePackageTopDown((IPackage) iModelElement, aPackage);
-            }
-        }
+    public void parseSinglePackage(IPackageUIModel iPackage){
+        Package aPackage = parsePackage(iPackage);
 
         codebase.addPackage(aPackage);
-
-        return aPackage;
     }
 }
