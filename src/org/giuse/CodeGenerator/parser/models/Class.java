@@ -1,4 +1,4 @@
-package org.giuse.JavaGenerator.parser.models;
+package org.giuse.CodeGenerator.parser.models;
 
 import java.util.ArrayList;
 
@@ -48,7 +48,7 @@ public class Class extends Struct{
 
         classContent.append("class").append(" ").append(super.name);
 
-        if(getExtends() != null)
+        if(!getExtends().isEmpty())
             classContent.append(" extends ").append(getExtends());
 
         for(int i=0;i<getImplements().size();i++){
