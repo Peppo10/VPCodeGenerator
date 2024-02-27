@@ -1,17 +1,17 @@
-package org.giuse.JavaGenerator.generator;
+package org.giuse.CodeGenerator.generator;
 
-import org.giuse.JavaGenerator.parser.models.Class;
-import org.giuse.JavaGenerator.parser.models.Codebase;
-import org.giuse.JavaGenerator.parser.models.Interface;
-import org.giuse.JavaGenerator.parser.models.Package;
-import org.giuse.JavaGenerator.utils.GUI;
+import org.giuse.CodeGenerator.parser.models.Class;
+import org.giuse.CodeGenerator.parser.models.Codebase;
+import org.giuse.CodeGenerator.parser.models.Interface;
+import org.giuse.CodeGenerator.parser.models.Package;
+import org.giuse.CodeGenerator.utils.GUI;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import static org.giuse.JavaGenerator.utils.Config.PLUGIN_NAME;
-import static org.giuse.JavaGenerator.utils.GUI.viewManager;
+import static org.giuse.CodeGenerator.utils.Config.PLUGIN_NAME;
+import static org.giuse.CodeGenerator.utils.GUI.viewManager;
 
 public class Generator {
     public static final String TAG = "Generator";

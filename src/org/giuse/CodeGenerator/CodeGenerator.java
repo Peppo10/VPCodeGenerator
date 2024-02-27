@@ -1,9 +1,9 @@
-package org.giuse.JavaGenerator;
+package org.giuse.CodeGenerator;
 
 import com.vp.plugin.VPPlugin;
 import com.vp.plugin.VPPluginInfo;
 
-public class JavaGenerator implements VPPlugin {
+public class CodeGenerator implements VPPlugin {
 	@Override
 	public void loaded(VPPluginInfo vpi){
 	}

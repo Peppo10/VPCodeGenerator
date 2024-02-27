@@ -1,4 +1,4 @@
-package org.giuse.JavaGenerator.utils;
+package org.giuse.CodeGenerator.utils;
 
 import com.vp.plugin.ApplicationManager;
 import com.vp.plugin.ViewManager;
@@ -13,9 +13,7 @@ import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -121,12 +119,18 @@ public class GUI {
         linkButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         linkButton.addActionListener(e -> {
-            if (Desktop.isDesktopSupported())
+            if (Desktop.isDesktopSupported()){
                 try {
                     Desktop.getDesktop().browse(uri);
                 } catch (IOException exception) {
                     exception.printStackTrace();
                 }
+                try {
+                    Desktop.getDesktop().mail(uri);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
             throw new UnsupportedOperationException("Desktop is not supported for browsing");
         });
         linkButton.addMouseListener(new MouseListener() {
@@ -162,7 +166,6 @@ public class GUI {
         return linkButton;
     }
 
-    @SuppressWarnings("unused")
     public static JButton createLinkButton(String text, URI uri) {
         return createLinkButton(text, uri, null);
     }
@@ -247,7 +250,7 @@ public class GUI {
     }
 
     public static ImageIcon getImageIcon() {
-        String discoverImagePath = String.join(File.separator, Config.ICONS_PATH, "JavaGenerator.png");
-        return GUI.loadImage(discoverImagePath, "Process discovery icon", 0.5f);
+        String discoverImagePath = String.join(File.separator, Config.ICONS_PATH, "CodeGenerator.png");
+        return GUI.loadImage(discoverImagePath, "Process discovery icon", 0.1f);
     }
 }

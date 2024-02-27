@@ -1,4 +1,4 @@
-package org.giuse.JavaGenerator.parser.models;
+package org.giuse.CodeGenerator.parser.models;
 
 import java.io.File;
 import java.util.ArrayList;

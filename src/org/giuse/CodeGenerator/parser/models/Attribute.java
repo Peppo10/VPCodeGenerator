@@ -1,4 +1,4 @@
-package org.giuse.JavaGenerator.parser.models;
+package org.giuse.CodeGenerator.parser.models;
 
 public class Attribute{
     private String scope;

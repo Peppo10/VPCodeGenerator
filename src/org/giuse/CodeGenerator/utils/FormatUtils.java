@@ -1,4 +1,4 @@
-package org.giuse.JavaGenerator.utils;
+package org.giuse.CodeGenerator.utils;
 
 public class FormatUtils {
     public static String firstUpperFormat(String string){

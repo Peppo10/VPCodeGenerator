@@ -1,4 +1,4 @@
-package org.giuse.JavaGenerator;
+package org.giuse.CodeGenerator;
 
 import com.vp.plugin.action.VPAction;
 import com.vp.plugin.action.VPContext;
@@ -7,17 +7,17 @@ import com.vp.plugin.diagram.IDiagramElement;
 import com.vp.plugin.diagram.shape.IClassUIModel;
 import com.vp.plugin.diagram.shape.IPackageUIModel;
 import com.vp.plugin.model.*;
-import org.giuse.JavaGenerator.generator.Generator;
-import org.giuse.JavaGenerator.parser.Parser;
-import org.giuse.JavaGenerator.utils.GUI;
+import org.giuse.CodeGenerator.generator.Generator;
+import org.giuse.CodeGenerator.parser.Parser;
+import org.giuse.CodeGenerator.utils.GUI;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
-import static org.giuse.JavaGenerator.utils.GUI.viewManager;
+import static org.giuse.CodeGenerator.utils.GUI.viewManager;
 
-public class GenerateJavaActionController implements VPContextActionController {
+public class GenerateCodeContextActionController implements VPContextActionController {
     public static final String TAG = "GenerateJava";
-    public GenerateJavaActionController(){
+    public GenerateCodeContextActionController(){
 
     }
 

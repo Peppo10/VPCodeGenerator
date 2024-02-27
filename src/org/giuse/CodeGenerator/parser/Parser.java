@@ -1,18 +1,18 @@
-package org.giuse.JavaGenerator.parser;
+package org.giuse.CodeGenerator.parser;
 import com.vp.plugin.diagram.*;
 import com.vp.plugin.diagram.shape.IClassUIModel;
 import com.vp.plugin.diagram.shape.IPackageUIModel;
 import com.vp.plugin.model.*;
-import org.giuse.JavaGenerator.parser.models.*;
-import org.giuse.JavaGenerator.parser.models.Class;
-import org.giuse.JavaGenerator.parser.models.Package;
-import org.giuse.JavaGenerator.utils.FormatUtils;
-import org.giuse.JavaGenerator.utils.GUI;
+import org.giuse.CodeGenerator.parser.models.*;
+import org.giuse.CodeGenerator.parser.models.Class;
+import org.giuse.CodeGenerator.parser.models.Package;
+import org.giuse.CodeGenerator.utils.FormatUtils;
+import org.giuse.CodeGenerator.utils.GUI;
 import java.awt.*;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import static org.giuse.JavaGenerator.utils.Config.PLUGIN_NAME;
-import static org.giuse.JavaGenerator.utils.GUI.viewManager;
+import static org.giuse.CodeGenerator.utils.Config.PLUGIN_NAME;
+import static org.giuse.CodeGenerator.utils.GUI.viewManager;
 
 public class Parser {
     public static final String TAG = "Parser";
