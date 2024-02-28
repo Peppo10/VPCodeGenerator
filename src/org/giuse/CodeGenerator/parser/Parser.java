@@ -11,6 +11,8 @@ import org.giuse.CodeGenerator.utils.GUI;
 import java.awt.*;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import static org.giuse.CodeGenerator.utils.Config.PLUGIN_NAME;
 import static org.giuse.CodeGenerator.utils.GUI.viewManager;
 
@@ -110,6 +112,9 @@ public class Parser {
             }
         }
 
+        if(templateParameters != null)
+            builder.hasTemplate(parseTemplate(templateParameters));
+
         for(IRelationshipEnd relationship: relationshipsFrom){
             if(relationship.getEndRelationship() instanceof IAssociation){
                 Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_FROM_TO);
@@ -139,11 +144,32 @@ public class Parser {
         return builder.build();
     }
 
+    private Template parseTemplate(ITemplateParameter[] parameters) {
+        Template.Builder builder= new Template.Builder();
+
+        for(ITemplateParameter parameter : parameters){
+            String formattedType = null;
+
+            if(parameter.typeCount() > 0)
+                 formattedType = FormatUtils.toJavaType(parameter.getTypeByIndex(0).getTypeAsString());
+
+            if (parameter.typeCount() > 1)
+                viewManager.showMessage("In " + parameter.getName() + " only first type is considered -> " +Arrays.toString(parameter.toTypeArray()), PLUGIN_NAME);
+
+            builder.addParameter(parameter.getName(), formattedType);
+
+            if(parameter.getDefaultValue() != null)
+                viewManager.showMessage(parameter.getName() +" initial value is ignored", PLUGIN_NAME);
+        }
+
+        return builder.build();
+    }
+
     private Attribute parseAttribute(IAttribute attribute){
         if(attribute.getTypeAsString() != null){
             viewManager.showMessage(attribute.getVisibility()+" "+attribute.getTypeAsString() +" "+ attribute.getName() + ";", PLUGIN_NAME);
 
-            String formattedType = FormatUtils.firstUpperFormat(attribute.getTypeAsString());
+            String formattedType = FormatUtils.toJavaType(attribute.getTypeAsString());
 
             return new Attribute(attribute.getVisibility(), formattedType, attribute.getName(), attribute.getInitialValue());
         }
@@ -159,13 +185,13 @@ public class Parser {
 
             String returnType = function.getReturnTypeAsString();
 
-            String formattedReturnType = returnType.compareTo("void") == 0 ? returnType : FormatUtils.firstUpperFormat(returnType);
+            String formattedReturnType = returnType.compareTo("void") == 0 ? returnType : FormatUtils.toJavaType(returnType);
 
             Function.Builder builderFunction = new Function.Builder(function.getName(),function.getVisibility(), formattedReturnType);
 
             for(IParameter parameter :function.toParameterArray()){
                 if(parameter.getTypeAsText() !=null){
-                    String formattedType = FormatUtils.firstUpperFormat(parameter.getTypeAsString());
+                    String formattedType = FormatUtils.toJavaType(parameter.getTypeAsString());
                     builderFunction.addParameter(new Attribute("", formattedType,parameter.getName(), null));
                 }
                 else{
@@ -215,7 +241,7 @@ public class Parser {
         viewManager.showMessage(from.getName() + " has " + toMultiplicity + " " + to.getName(), PLUGIN_NAME);
 
         String attributeType;
-        String formattedType = needsAssociationClass ? FormatUtils.firstUpperFormat(associationName) : FormatUtils.firstUpperFormat(to.getName());
+        String formattedType = needsAssociationClass ? FormatUtils.toJavaType(associationName) : FormatUtils.toJavaType(to.getName());
         String attributeName = to.getName();
 
         if(toMultiplicity.compareTo("0") == 0)

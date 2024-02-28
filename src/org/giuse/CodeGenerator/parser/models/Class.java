@@ -7,8 +7,8 @@ public class Class extends Struct{
     private ArrayList<String> Implements;
     private Boolean isAbstract;
 
-    private Class(String pathname, Boolean isAbstract ,String scope, String name, String anExtends, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions) {
-        super(pathname, scope, name, attributes, functions);
+    private Class(String pathname, Boolean isAbstract ,String scope, String name, String anExtends, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions, Template template) {
+        super(pathname, scope, name, attributes, functions, template);
         Extends = anExtends;
         Implements = anImplements;
         this.isAbstract = isAbstract;
@@ -47,6 +47,9 @@ public class Class extends Struct{
             classContent.append("abstract").append(" ");
 
         classContent.append("class").append(" ").append(super.name);
+
+        if(template != null)
+            classContent.append(template.generateContent());
 
         if(!getExtends().isEmpty())
             classContent.append(" extends ").append(getExtends());
@@ -105,7 +108,7 @@ public class Class extends Struct{
         }
 
         public Class build(){
-            return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions);
+            return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bTemplate);
         }
     }
 }

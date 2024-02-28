@@ -5,53 +5,30 @@ import java.util.ArrayList;
 
 public class Struct extends File {
     protected String scope;
+
     protected String name;
     protected ArrayList<Attribute> attributes;
     protected ArrayList<Function> functions;
-
+    protected Template template;
     public Struct(){
         super("");
         throw new UnsupportedOperationException("Struct cannot be instanced!");
     }
 
-    protected Struct(String pathname, String scope, String name, ArrayList<Attribute> attributes, ArrayList<Function> functions) {
+    protected Struct(String pathname, String scope, String name, ArrayList<Attribute> attributes, ArrayList<Function> functions, Template template) {
         super(pathname);
         this.scope = scope;
         this.name = name;
         this.attributes = attributes;
         this.functions = functions;
+        this.template = template;
     }
 
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
-    }
-
-    public ArrayList<Attribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(ArrayList<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
-    public ArrayList<Function> getFunctions() {
-        return functions;
-    }
-
-    public void setFunctions(ArrayList<Function> functions) {
-        this.functions = functions;
-    }
-
-    public void setScope(String scope) {
-        this.scope = scope;
-    }
-
-    public String getScope() {
-        return this.scope;
     }
 
     public static abstract class Builder{
@@ -60,6 +37,7 @@ public class Struct extends File {
         protected final String bPathname;
         protected final ArrayList<Attribute> bAttributes;
         protected final ArrayList<Function> bFunctions;
+        protected Template bTemplate;
 
         public Builder(String pathname, String scope, String name){
             this.bPathname = pathname;
@@ -79,8 +57,13 @@ public class Struct extends File {
             return this;
         }
 
+        public Builder hasTemplate(Template template){
+            this.bTemplate = template;
+            return this;
+        }
+
         public Struct build(){
-            return new Struct(bPathname, bScope, bName, bAttributes, bFunctions);
+            return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bTemplate);
         }
     }
 }

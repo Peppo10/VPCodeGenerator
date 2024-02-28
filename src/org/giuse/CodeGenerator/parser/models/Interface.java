@@ -5,8 +5,8 @@ import java.util.ArrayList;
 public class Interface extends Struct{
     private String Extends;
 
-    public Interface(String pathname, String scope, String name, String anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions) {
-        super(pathname, scope, name, attributes, functions);
+    public Interface(String pathname, String scope, String name, String anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions, Template template) {
+        super(pathname, scope, name, attributes, functions, template);
         Extends = anExtends;
     }
 
@@ -24,6 +24,9 @@ public class Interface extends Struct{
         interfaceContent.append(super.scope).append(" ");
 
         interfaceContent.append("interface").append(" ").append(super.name);
+
+        if(template != null)
+            interfaceContent.append(template.generateContent());
 
         if(getExtends() != null)
             interfaceContent.append(" extends ").append(getExtends());
@@ -60,7 +63,7 @@ public class Interface extends Struct{
         }
 
         public Interface build(){
-            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions);
+            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bTemplate);
         }
     }
 }
