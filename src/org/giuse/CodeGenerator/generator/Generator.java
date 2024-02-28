@@ -61,18 +61,16 @@ public class Generator {
     }
 
     private static void generateInterface(Interface file) throws IOException {
-        if(file.createNewFile()){
-            FileWriter myWriter = new FileWriter(file.getAbsolutePath());
-            myWriter.write(file.generateContent());
-            myWriter.close();
-        }
+        file.createNewFile();
+        FileWriter myWriter = new FileWriter(file.getAbsolutePath());
+        myWriter.write(file.generateContent());
+        myWriter.close();
     }
 
     private static void generateClass(Class file) throws IOException {
-        if(file.createNewFile()){
-            FileWriter myWriter = new FileWriter(file.getAbsolutePath());
-            myWriter.write(file.generateContent());
-            myWriter.close();
-        }
+        file.createNewFile();
+        FileWriter myWriter = new FileWriter(file.getAbsolutePath());
+        myWriter.write(file.generateContent());
+        myWriter.close();
     }
 }
