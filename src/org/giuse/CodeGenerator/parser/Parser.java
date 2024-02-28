@@ -47,6 +47,8 @@ public class Parser {
     private Struct parseClass(IClassUIModel iClassUIModel, String packagePath){
         String optionalPackagePath;
         IClass iClass = (IClass) iClassUIModel.getModelElement();
+        boolean isClass = false;
+        boolean hasExtend = false;
 
         if(packagePath == null){
             IDiagramElement parent = iClassUIModel.getParent();
@@ -66,14 +68,19 @@ public class Parser {
                                 new Interface.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName()) :
                                 new Class.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
 
-        if(builder instanceof Class.Builder)
+        if(builder instanceof Class.Builder){
             if(iClass.isAbstract())
                 ((Class.Builder)builder).isAbstract();
+
+            isClass = true;
+        }
+
 
         IAttribute[] attributes = iClass.toAttributeArray();
         IOperation[] operations = iClass.toOperationArray();
         IRelationshipEnd[] relationshipsFrom = iClass.toFromRelationshipEndArray();
         IRelationshipEnd[] relationshipsTo = iClass.toToRelationshipEndArray();
+        ISimpleRelationship[] simpleRelationshipsFrom = iClass.toFromRelationshipArray();
         ITemplateParameter[] templateParameters = iClass.toTemplateParameterArray();
         Color defaultColor = iClassUIModel.getFillColor().getColor1();
         Color defaultError = new Color(255,0,0,255);
@@ -116,27 +123,66 @@ public class Parser {
             builder.hasTemplate(parseTemplate(templateParameters));
 
         for(IRelationshipEnd relationship: relationshipsFrom){
-            if(relationship.getEndRelationship() instanceof IAssociation){
+            IEndRelationship endRelationship = relationship.getEndRelationship();
+
+            if( endRelationship instanceof IAssociation){
                 Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_FROM_TO);
                 if(parsedAssociation != null)
                     builder.addAttribute(parsedAssociation);
                 else{
                     iClassUIModel.setForeground(defaultError);
-                    relationship.getEndRelationship().addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
+                    endRelationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
                     return null;
                 }
             }
         }
 
         for(IRelationshipEnd relationship: relationshipsTo){
-            if(relationship.getEndRelationship() instanceof IAssociation){
+            IEndRelationship endRelationship = relationship.getEndRelationship();
+
+            if(endRelationship instanceof IAssociation){
                 Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_TO_FROM);
                 if(parsedAssociation != null)
                     builder.addAttribute(parsedAssociation);
                 else{
                     iClassUIModel.setForeground(defaultError);
-                    relationship.getEndRelationship().addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
+                    endRelationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
                     return null;
+                }
+            }
+        }
+
+        for(ISimpleRelationship relationship: simpleRelationshipsFrom){
+            if (relationship instanceof IGeneralization) {
+                IModelElement to = relationship.getTo();
+
+                if(to.hasStereotype("Interface")){
+                    viewManager.showMessage(iClass.getName() + " implements " + to.getName(), PLUGIN_NAME);
+                    if(isClass)
+                        ((Class.Builder) builder).addImplements(to.getName());
+                    else
+                        ((Interface.Builder) builder).addExtends(to.getName());
+                }
+                else{
+                    if(isClass){
+                        if(!hasExtend){
+                            viewManager.showMessage(iClass.getName() + " extends " + to.getName(), PLUGIN_NAME);
+                            ((Class.Builder) builder).setExtends(to.getName());
+                            hasExtend = true;
+                        }
+                        else {
+                            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, iClass.getName() + " cannot extends multiple classes");
+                            iClassUIModel.setForeground(defaultError);
+                            relationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
+                            return null;
+                        }
+                    }
+                    else{
+                        GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, iClass.getName() + "is an Interface, and can be only extends others interfaces");
+                        iClassUIModel.setForeground(defaultError);
+                        relationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
+                        return null;
+                    }
                 }
             }
         }
@@ -241,24 +287,33 @@ public class Parser {
         viewManager.showMessage(from.getName() + " has " + toMultiplicity + " " + to.getName(), PLUGIN_NAME);
 
         String attributeType;
+        String initializer = null;
         String formattedType = needsAssociationClass ? FormatUtils.toJavaType(associationName) : FormatUtils.toJavaType(to.getName());
         String attributeName = to.getName();
 
         if(toMultiplicity.compareTo("0") == 0)
             return null;
 
-        if(toMultiplicity.contains("*")) {
+        if(FormatUtils.isArrayList(toMultiplicity)) {
             attributeType = "ArrayList<" + formattedType + ">";
             attributeName+="s";
         }
-        else
+        else if(FormatUtils.isFixedArray(toMultiplicity)){
+            initializer = "new " + formattedType + "[" + FormatUtils.getFixedArrayLength(toMultiplicity) + "]";
+            attributeType = formattedType+"[]";
+        }
+        else if(FormatUtils.isNotArray(toMultiplicity))
             attributeType = formattedType;
+        else {
+            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG,toMultiplicity + " is invalid multiplicity ");
+            return null;
+        }
 
         String relationVisibility = ((IAssociation) association.getEndRelationship()).getVisibility();
 
         String scope = relationVisibility.compareTo("Unspecified") == 0 ? "private" : relationVisibility;
 
-        return new Attribute(scope, attributeType, attributeName.toLowerCase(), null);
+        return new Attribute(scope, attributeType, attributeName.toLowerCase(), initializer);
     }
 
     private Interface parseInterface(IClassUIModel iInterface, String packagePath){

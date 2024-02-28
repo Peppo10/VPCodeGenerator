@@ -1,5 +1,7 @@
 package org.giuse.CodeGenerator.parser.models;
 
+import com.vp.plugin.model.ITemplateParameter;
+
 public class Attribute{
     private String scope;
     private String type;
@@ -54,5 +56,9 @@ public class Attribute{
             attributeContent.append("= ").append(this.initializer);
 
         return attributeContent.toString();
+    }
+
+    public interface Ciao{
+
     }
 }
