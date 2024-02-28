@@ -241,15 +241,20 @@ public class Parser {
         viewManager.showMessage(from.getName() + " has " + toMultiplicity + " " + to.getName(), PLUGIN_NAME);
 
         String attributeType;
+        String initializer = null;
         String formattedType = needsAssociationClass ? FormatUtils.toJavaType(associationName) : FormatUtils.toJavaType(to.getName());
         String attributeName = to.getName();
 
         if(toMultiplicity.compareTo("0") == 0)
             return null;
 
-        if(toMultiplicity.contains("*")) {
+        if(FormatUtils.isArrayList(toMultiplicity)) {
             attributeType = "ArrayList<" + formattedType + ">";
             attributeName+="s";
+        }
+        else if(FormatUtils.isFixedArray(toMultiplicity)){
+            initializer = "new " + formattedType + "[" + FormatUtils.getFixedArrayLength(toMultiplicity) + "]";
+            attributeType = formattedType+"[]";
         }
         else
             attributeType = formattedType;
@@ -258,7 +263,7 @@ public class Parser {
 
         String scope = relationVisibility.compareTo("Unspecified") == 0 ? "private" : relationVisibility;
 
-        return new Attribute(scope, attributeType, attributeName.toLowerCase(), null);
+        return new Attribute(scope, attributeType, attributeName.toLowerCase(), initializer);
     }
 
     private Interface parseInterface(IClassUIModel iInterface, String packagePath){
