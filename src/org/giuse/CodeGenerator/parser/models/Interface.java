@@ -3,18 +3,18 @@ package org.giuse.CodeGenerator.parser.models;
 import java.util.ArrayList;
 
 public class Interface extends Struct{
-    private String Extends;
+    private ArrayList<String> Extends;
 
-    public Interface(String pathname, String scope, String name, String anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions, Template template) {
+    public Interface(String pathname, String scope, String name, ArrayList<String> anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions, Template template) {
         super(pathname, scope, name, attributes, functions, template);
         Extends = anExtends;
     }
 
-    public String getExtends() {
+    public ArrayList<String> getExtends() {
         return Extends;
     }
 
-    public void setExtends(String anExtends) {
+    public void setExtends(ArrayList<String> anExtends) {
         Extends = anExtends;
     }
 
@@ -28,8 +28,12 @@ public class Interface extends Struct{
         if(template != null)
             interfaceContent.append(template.generateContent());
 
-        if(getExtends() != null)
-            interfaceContent.append(" extends ").append(getExtends());
+        for(int i=0;i<getExtends().size();i++){
+            if(i==0)
+                interfaceContent.append(" extends ").append(getExtends().get(i));
+            else
+                interfaceContent.append(", ").append(getExtends().get(i));
+        }
 
         interfaceContent.append("{");
 
@@ -51,14 +55,16 @@ public class Interface extends Struct{
     }
 
     public static class Builder extends Struct.Builder{
-        private String bExtends;
+        private final ArrayList<String> bExtends;
 
         public Builder(String pathname, String scope, String name){
             super(pathname,scope,name);
+
+            this.bExtends = new ArrayList<>();
         }
 
-        public Builder setExtends(String Extends){
-            this.bExtends = Extends;
+        public Builder addExtends(String aExtends){
+            this.bExtends.add(aExtends);
             return this;
         }
 

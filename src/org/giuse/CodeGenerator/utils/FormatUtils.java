@@ -24,9 +24,6 @@ public class FormatUtils {
             else
                 number = group1;
 
-            viewManager.showMessage("group1: "+matcher.group(1),TAG);
-            viewManager.showMessage("group5: "+matcher.group(5),TAG);
-
             return number;
         }
 
