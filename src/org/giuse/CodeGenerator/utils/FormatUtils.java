@@ -8,6 +8,11 @@ public class FormatUtils {
     private static final String ARRAYLIST_REGEX = "(0|1)\\.+\\*";
     private static final String NOT_ARRAY_REGEX = "1|((0|1)\\.+1)";
     private static final String FIXED_ARRAY_REGEX = "([2-9])+|((0|1)(\\.+)([2-9]+))";
+    private static final String CAPS_LOCK_REGEX = "[A-Z]+";
+
+    public static boolean isCapsLock(String string){
+        return string.matches(CAPS_LOCK_REGEX);
+    }
 
     public static String getFixedArrayLength(String array){
         Matcher matcher = Pattern.compile(FIXED_ARRAY_REGEX).matcher(array);

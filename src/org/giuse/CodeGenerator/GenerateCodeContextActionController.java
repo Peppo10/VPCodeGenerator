@@ -32,12 +32,8 @@ public class GenerateCodeContextActionController implements VPContextActionContr
             String choosePath = fileChooser.getSelectedFile().getAbsolutePath();
             Parser parser = Parser.getInstance(vpContext.getDiagram().getName(), choosePath);
 
-            if(modelElement instanceof IClass){
-                if(modelElement.hasStereotype("Interface"))
-                    parser.parseSingleInterface((IClassUIModel) vpContext.getDiagramElement());
-                else
-                    parser.parseSingleClass((IClassUIModel) vpContext.getDiagramElement());
-            }
+            if(modelElement instanceof IClass)
+                parser.parseSingleClass((IClassUIModel) vpContext.getDiagramElement());
             else if (modelElement instanceof IPackage)
                 parser.parseSinglePackage((IPackageUIModel) vpContext.getDiagramElement());
             else
