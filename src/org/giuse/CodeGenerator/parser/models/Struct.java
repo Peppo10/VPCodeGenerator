@@ -1,6 +1,7 @@
 package org.giuse.CodeGenerator.parser.models;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Struct extends File {
@@ -62,21 +63,18 @@ public class Struct extends File {
             return this;
         }
 
-        public Struct build(){
-            return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bTemplate);
-        }
-
-        public Struct buildWithConstructor(){
+        public Builder addConstructor(){
             Function.Builder builder = new Function.Builder(this.bName,"public","");
 
-            for(Attribute attribute: this.bAttributes){
-                attribute.setInitializer(null);
-                attribute.setScope("");
-                builder.addParameter(attribute);
-            }
+            for(Attribute attribute: this.bAttributes)
+                builder.addParameter(new Attribute("",attribute.getType(),attribute.getName(),""));
 
             this.addFunction(builder.build());
 
+            return this;
+        }
+
+        public Struct build(){
             return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bTemplate);
         }
     }

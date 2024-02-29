@@ -5,9 +5,9 @@ import java.util.regex.Pattern;
 
 public class FormatUtils {
     public static final String TAG = "FormatUtils";
-    private static final String ARRAYLIST_REGEX = "(0|1)\\.+\\*";
-    private static final String NOT_ARRAY_REGEX = "1|((0|1)\\.+1)";
-    private static final String FIXED_ARRAY_REGEX = "([2-9])+|((0|1)(\\.+)([2-9]+))";
+    private static final String ARRAYLIST_REGEX = "([0|1])\\.+\\*";
+    private static final String NOT_ARRAY_REGEX = "1|(([0|1])\\.+1)";
+    private static final String FIXED_ARRAY_REGEX = "([2-9])+|(([0|1])(\\.+)([2-9]+))";
     private static final String CAPS_LOCK_REGEX = "[A-Z]+";
 
     public static boolean isCapsLock(String string){
@@ -44,15 +44,28 @@ public class FormatUtils {
     public static boolean isFixedArray(String vpType){
         return vpType.matches(FIXED_ARRAY_REGEX);
     }
-    public static String toJavaType(String vpPrimitive){
-        String firstFormat = firstUpperFormat(vpPrimitive);
+    public static String toJavaType(String vpType){
+        String firstFormat = firstUpperFormat(vpType);
 
-        if(firstFormat.compareTo("Void") == 0)
-            return firstFormat.toLowerCase();
-        else if (firstFormat.compareTo("Int") == 0)
-            return "Integer";
-        else
-            return firstFormat;
+        //Boolean Byte Char Double Float Int Long Short String Void
+
+        switch (firstFormat){
+            case "Void":
+                return firstFormat.toLowerCase();
+            case "Int":
+                return "Integer";
+            case "String":
+            case "Short":
+            case "Long":
+            case "Float":
+            case "Double":
+            case "Char":
+            case "Byte":
+            case "Boolean":
+                return firstFormat;
+            default:
+                return vpType;
+        }
     }
     public static String firstUpperFormat(String string){
         if(string == null || string.isEmpty())

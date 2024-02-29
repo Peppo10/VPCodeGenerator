@@ -206,7 +206,7 @@ public class Parser {
             }
         }
 
-        return builder.buildWithConstructor();
+        return builder.addConstructor().build();
     }
 
     private Template parseTemplate(ITemplateParameter[] parameters) {
@@ -257,7 +257,7 @@ public class Parser {
             for(IParameter parameter :function.toParameterArray()){
                 if(parameter.getTypeAsText() !=null){
                     String formattedType = FormatUtils.toJavaType(parameter.getTypeAsString());
-                    builderFunction.addParameter(new Attribute("", formattedType,parameter.getName(), null));
+                    builderFunction.addParameter(new Attribute("", formattedType,parameter.getName(), ""));
                 }
                 else{
                     GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, "parameter " + parameter.getName() +" has null type");

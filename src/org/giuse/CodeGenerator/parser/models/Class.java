@@ -41,7 +41,8 @@ public class Class extends Struct{
     public String generateContent() {
         StringBuilder classContent = new StringBuilder();
 
-        classContent.append(super.scope).append(" ");
+        if((super.scope!= null) && (!super.scope.isEmpty()))
+            classContent.append(super.scope).append(" ");
 
         if(getAbstract())
             classContent.append("abstract").append(" ");
@@ -108,12 +109,6 @@ public class Class extends Struct{
         }
 
         public Class build(){
-            return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bTemplate);
-        }
-
-        public Class buildWithConstructor(){
-            super.buildWithConstructor();
-
             return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bTemplate);
         }
     }

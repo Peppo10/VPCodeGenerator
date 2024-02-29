@@ -25,7 +25,8 @@ public class Enum extends Struct{
     public String generateContent() {
         StringBuilder enumContent = new StringBuilder();
 
-        enumContent.append(super.scope).append(" ");
+        if((super.scope!= null) && (!super.scope.isEmpty()))
+            enumContent.append(super.scope).append(" ");
 
         enumContent.append("enum").append(" ").append(super.name);
 
@@ -92,12 +93,6 @@ public class Enum extends Struct{
         }
 
         public Enum build(){
-            return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions);
-        }
-
-        public Enum buildWithConstructor(){
-            super.buildWithConstructor();
-
             return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions);
         }
     }
