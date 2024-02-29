@@ -361,6 +361,7 @@ public class Parser {
 
         for(IShapeUIModel shapeUIModel: iPackage.toChildArray()){
             IModelElement iModelElement = shapeUIModel.getModelElement();
+
             if(iModelElement instanceof IClass){
                 if(iModelElement.hasStereotype("Interface"))
                     aPackage.addFile(parseInterface((IClassUIModel) shapeUIModel, aPackage.getPathname()));
@@ -378,13 +379,17 @@ public class Parser {
         for(IShapeUIModel shapeUIModel: iDiagramUIModel.toShapeUIModelArray()){
             IModelElement modelElement = shapeUIModel.getModelElement();
 
-            if(modelElement instanceof IPackage)
-                codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel));
-            else if(shapeUIModel.getModelElement() instanceof IClass){
-                if(modelElement.hasStereotype("Interface"))
-                    codebase.addFile(parseInterface((IClassUIModel) shapeUIModel, codebase.getPathname()));
-                else
-                    codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
+            if(modelElement instanceof IPackage){
+                if(modelElement.getParent() instanceof IModel)
+                    codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel));
+            }
+            else if(modelElement instanceof IClass){
+                if(modelElement.getParent() == null){
+                    if(modelElement.hasStereotype("Interface"))
+                        codebase.addFile(parseInterface((IClassUIModel) shapeUIModel, codebase.getPathname()));
+                    else
+                        codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
+                }
             }
         }
     }

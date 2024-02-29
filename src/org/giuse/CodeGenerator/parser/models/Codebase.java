@@ -21,7 +21,8 @@ public class Codebase{
         this.name = name;
     }
     public void addFile(File file){
-        this.files.add(file);
+        if(!this.files.contains(file))
+            this.files.add(file);
     }
 
     public void addPackage(Package aPackage){

@@ -3,8 +3,6 @@ package org.giuse.CodeGenerator.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.giuse.CodeGenerator.utils.GUI.viewManager;
-
 public class FormatUtils {
     public static final String TAG = "FormatUtils";
     private static final String ARRAYLIST_REGEX = "(0|1)\\.+\\*";
