@@ -41,7 +41,8 @@ public class Class extends Struct{
     public String generateContent() {
         StringBuilder classContent = new StringBuilder();
 
-        classContent.append(super.scope).append(" ");
+        if((super.scope!= null) && (!super.scope.isEmpty()))
+            classContent.append(super.scope).append(" ");
 
         if(getAbstract())
             classContent.append("abstract").append(" ");

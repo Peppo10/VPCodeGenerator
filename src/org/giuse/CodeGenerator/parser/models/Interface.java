@@ -21,7 +21,8 @@ public class Interface extends Struct{
     public String generateContent() {
         StringBuilder interfaceContent = new StringBuilder();
 
-        interfaceContent.append(super.scope).append(" ");
+        if((super.scope != null) && (!super.scope.isEmpty()))
+            interfaceContent.append(super.scope).append(" ");
 
         interfaceContent.append("interface").append(" ").append(super.name);
 

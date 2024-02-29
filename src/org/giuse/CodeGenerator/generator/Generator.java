@@ -2,6 +2,7 @@ package org.giuse.CodeGenerator.generator;
 
 import org.giuse.CodeGenerator.parser.models.Class;
 import org.giuse.CodeGenerator.parser.models.Codebase;
+import org.giuse.CodeGenerator.parser.models.Enum;
 import org.giuse.CodeGenerator.parser.models.Interface;
 import org.giuse.CodeGenerator.parser.models.Package;
 import org.giuse.CodeGenerator.utils.GUI;
@@ -57,7 +58,16 @@ public class Generator {
             generateClass((Class)file);
         } else if (file instanceof Interface) {
             generateInterface((Interface)file);
+        } else if (file instanceof Enum) {
+            generateEnum((Enum)file);
         }
+    }
+
+    private static void generateEnum(Enum file) throws IOException {
+        file.createNewFile();
+        FileWriter myWriter = new FileWriter(file.getAbsolutePath());
+        myWriter.write(file.generateContent());
+        myWriter.close();
     }
 
     private static void generateInterface(Interface file) throws IOException {

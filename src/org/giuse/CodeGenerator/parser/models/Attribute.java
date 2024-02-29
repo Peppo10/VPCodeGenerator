@@ -1,7 +1,5 @@
 package org.giuse.CodeGenerator.parser.models;
 
-import com.vp.plugin.model.ITemplateParameter;
-
 public class Attribute{
     private String scope;
     private String type;
@@ -50,15 +48,14 @@ public class Attribute{
     public String generateContent() {
         StringBuilder attributeContent = new StringBuilder();
 
-        attributeContent.append(this.scope).append(" ").append(this.type).append(" ").append(this.name);
+        if((this.scope!= null) && (!this.scope.isEmpty()))
+            attributeContent.append(this.scope).append(" ");
 
-        if(this.initializer != null)
+        attributeContent.append(this.type).append(" ").append(this.name);
+
+        if((this.initializer!= null) && (!this.initializer.isEmpty()))
             attributeContent.append("= ").append(this.initializer);
 
         return attributeContent.toString();
-    }
-
-    public interface Ciao{
-
     }
 }
