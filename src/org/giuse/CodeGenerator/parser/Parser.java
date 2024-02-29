@@ -206,7 +206,7 @@ public class Parser {
             }
         }
 
-        return builder.build();
+        return builder.buildWithConstructor();
     }
 
     private Template parseTemplate(ITemplateParameter[] parameters) {

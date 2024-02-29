@@ -65,5 +65,19 @@ public class Struct extends File {
         public Struct build(){
             return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bTemplate);
         }
+
+        public Struct buildWithConstructor(){
+            Function.Builder builder = new Function.Builder(this.bName,"public","");
+
+            for(Attribute attribute: this.bAttributes){
+                attribute.setInitializer(null);
+                attribute.setScope("");
+                builder.addParameter(attribute);
+            }
+
+            this.addFunction(builder.build());
+
+            return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bTemplate);
+        }
     }
 }

@@ -57,8 +57,4 @@ public class Attribute{
 
         return attributeContent.toString();
     }
-
-    public interface Ciao{
-
-    }
 }

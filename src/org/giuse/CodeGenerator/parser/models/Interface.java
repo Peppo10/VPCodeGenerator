@@ -71,5 +71,11 @@ public class Interface extends Struct{
         public Interface build(){
             return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bTemplate);
         }
+
+        public Interface buildWithConstructor(){
+            super.buildWithConstructor();
+
+            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bTemplate);
+        }
     }
 }

@@ -10,7 +10,7 @@ public class Function{
 
     private Boolean isVirtual;
 
-    public Function(String scope, String returnType, String name, ArrayList<Attribute> parameters, Boolean isVirtual) {
+    private Function(String scope, String returnType, String name, ArrayList<Attribute> parameters, Boolean isVirtual) {
         this.scope = scope;
         this.returnType = returnType;
         this.name = name;

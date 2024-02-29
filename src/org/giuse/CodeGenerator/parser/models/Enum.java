@@ -94,5 +94,11 @@ public class Enum extends Struct{
         public Enum build(){
             return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions);
         }
+
+        public Enum buildWithConstructor(){
+            super.buildWithConstructor();
+
+            return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions);
+        }
     }
 }

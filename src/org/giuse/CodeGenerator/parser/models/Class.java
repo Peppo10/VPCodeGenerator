@@ -110,5 +110,11 @@ public class Class extends Struct{
         public Class build(){
             return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bTemplate);
         }
+
+        public Class buildWithConstructor(){
+            super.buildWithConstructor();
+
+            return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bTemplate);
+        }
     }
 }
