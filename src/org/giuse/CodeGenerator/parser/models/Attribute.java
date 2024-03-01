@@ -1,6 +1,9 @@
 package org.giuse.CodeGenerator.parser.models;
 
-public class Attribute{
+import org.giuse.CodeGenerator.parser.models.statements.Statement;
+import org.giuse.CodeGenerator.utils.FormatUtils;
+
+public class Attribute implements Statement {
     private String scope;
     private String type;
     private String name;
@@ -45,8 +48,12 @@ public class Attribute{
         return this.scope;
     }
 
-    public String generateContent() {
+    @Override
+    public String generateJava(int indentation) {
         StringBuilder attributeContent = new StringBuilder();
+        String formattedIndentation = FormatUtils.getIndentation(indentation);
+
+        attributeContent.append(formattedIndentation);
 
         if((this.scope!= null) && (!this.scope.isEmpty()))
             attributeContent.append(this.scope).append(" ");

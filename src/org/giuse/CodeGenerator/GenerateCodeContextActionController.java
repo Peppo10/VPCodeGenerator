@@ -30,7 +30,7 @@ public class GenerateCodeContextActionController implements VPContextActionContr
         if (fileChooser.showOpenDialog(viewManager.getRootFrame()) == JFileChooser.APPROVE_OPTION) {
 
             String choosePath = fileChooser.getSelectedFile().getAbsolutePath();
-            Parser parser = Parser.getInstance(vpContext.getDiagram().getName(), choosePath);
+            Parser parser = Parser.getInstance(vpContext, choosePath);
 
             if(modelElement instanceof IClass)
                 parser.parseSingleClass((IClassUIModel) vpContext.getDiagramElement());

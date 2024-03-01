@@ -1,4 +1,5 @@
 package org.giuse.CodeGenerator.parser;
+import com.vp.plugin.action.VPContext;
 import com.vp.plugin.diagram.*;
 import com.vp.plugin.diagram.shape.IClassUIModel;
 import com.vp.plugin.diagram.shape.IPackageUIModel;
@@ -10,6 +11,7 @@ import org.giuse.CodeGenerator.parser.models.Package;
 import org.giuse.CodeGenerator.utils.FormatUtils;
 import org.giuse.CodeGenerator.utils.GUI;
 import java.awt.*;
+import java.io.File;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,24 +23,27 @@ public class Parser {
     private enum ClassType{CLASS,INTERFACE,ENUM}
     public static final String TAG = "Parser";
     Codebase codebase;
-    private static Parser INSTANCE;
 
+    VPContext context;
+    private static Parser INSTANCE;
     public static String DEFAULT_PATH;
 
-    public static Parser getInstance(String name, String choosePath){
+    public static Parser getInstance(VPContext context, String choosePath){
         //TODO Config.UpdateProperty("actions.generate_code.default_path",choosePath);
+        String name = context.getDiagram().getName();
 
         DEFAULT_PATH = choosePath;
 
         if(INSTANCE == null)
-            INSTANCE = new Parser(name);
+            INSTANCE = new Parser(context, name);
 
         INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
 
         return INSTANCE;
     }
 
-    private Parser(String name){
+    private Parser(VPContext context, String name){
+        this.context = context;
         this.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
     }
 
@@ -68,15 +73,15 @@ public class Parser {
         }
 
         if(iClass.hasStereotype("Interface")){
-            builder = new Interface.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
+            builder = new Interface.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.INTERFACE;
         }
         else if(iClass.hasStereotype("Enum")){
-            builder = new Enum.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
+            builder = new Enum.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.ENUM;
         }
         else{
-            builder = new Class.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
+            builder = new Class.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.CLASS;
         }
 
@@ -89,8 +94,14 @@ public class Parser {
         IRelationshipEnd[] relationshipsTo = iClass.toToRelationshipEndArray();
         ISimpleRelationship[] simpleRelationshipsFrom = iClass.toFromRelationshipArray();
         ITemplateParameter[] templateParameters = iClass.toTemplateParameterArray();
+        IClass[] innerClasses = iClass.toClassArray();
         Color defaultColor = iClassUIModel.getFillColor().getColor1();
         Color defaultError = new Color(255,0,0,255);
+
+        for(IClass innerClass: innerClasses)
+            for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray())
+                    if(shapeUIModel instanceof IClassUIModel && (shapeUIModel.getModelElement().getId().compareTo(innerClass.getId()) == 0))
+                        builder.addInnerClass(parseClass((IClassUIModel) shapeUIModel,null));
 
         for (IAttribute attribute : attributes) {
             Attribute parsedAttribute = parseAttribute(attribute);
@@ -171,16 +182,38 @@ public class Parser {
             if (relationship instanceof IGeneralization) {
                 IModelElement to = relationship.getTo();
 
+                if(!(to instanceof IClass))
+                    continue;
+
                 if(to.hasStereotype("Interface")){
                     viewManager.showMessage(iClass.getName() + " implements " + to.getName(), PLUGIN_NAME);
 
                     if(classType == ClassType.INTERFACE)
                         ((Interface.Builder) builder).addExtends(to.getName());
-                    else if (classType == ClassType.CLASS) {
+                    else if (classType == ClassType.CLASS)
                         ((Class.Builder) builder).addImplements(to.getName());
-                    }
                     else
                         ((Enum.Builder) builder).addImplements(to.getName());
+
+                    for(IOperation function: ((IClass) to).toOperationArray()){
+                        Function parsedFunction = parseFunction(function);
+
+                        if(parsedFunction != null){
+                            parsedFunction.setOverride(true);
+
+                            builder.addFunction(parsedFunction);
+                        }
+                        else{
+                            ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(function,true);
+                            attributeColor.setBackground(defaultError);
+
+                            for(IParameter parameter :function.toParameterArray())
+                                parameter.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+
+                            function.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+                            return null;
+                        }
+                    }
                 }
                 else{
                     if(classType == ClassType.CLASS){
@@ -392,7 +425,6 @@ public class Parser {
                     codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel));
             }
             else if(modelElement instanceof IClass){
-                viewManager.showMessage(modelElement.getParent().getModelType(), TAG);
                 if(modelElement.getParent() instanceof IModel){
                     codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
                 }
@@ -401,7 +433,7 @@ public class Parser {
     }
 
     public void parseSingleClass(IClassUIModel iClass){
-        Class aClass = (Class) parseClass(iClass,null);
+        File aClass = parseClass(iClass,null);
 
         codebase.addFile(aClass);
     }
