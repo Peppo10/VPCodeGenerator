@@ -1,6 +1,7 @@
 package org.giuse.CodeGenerator;
 
 import com.vp.plugin.action.VPAction;
+import com.vp.plugin.action.VPActionController;
 import com.vp.plugin.action.VPContext;
 import com.vp.plugin.action.VPContextActionController;
 import com.vp.plugin.diagram.IDiagramElement;
@@ -17,9 +18,6 @@ import static org.giuse.CodeGenerator.utils.GUI.viewManager;
 
 public class GenerateCodeContextActionController implements VPContextActionController {
     public static final String TAG = "GenerateJava";
-    public GenerateCodeContextActionController(){
-
-    }
 
     @Override
     public void performAction(VPAction vpAction, VPContext vpContext, ActionEvent actionEvent) {

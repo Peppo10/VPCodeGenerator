@@ -2,6 +2,9 @@ package org.giuse.CodeGenerator.utils;
 
 import com.vp.plugin.ApplicationManager;
 import com.vp.plugin.ViewManager;
+import com.vp.plugin.diagram.shape.IClassUIModel;
+import com.vp.plugin.model.IClass;
+import com.vp.plugin.model.IModelElement;
 import com.vp.plugin.view.IDialog;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -27,6 +30,8 @@ public class GUI {
     private static final Border defaultBorder = BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(Color.LIGHT_GRAY, DEFAULT_BORDER_SIZE, true), defaultPaddingBorder);
     public static final ViewManager viewManager = ApplicationManager.instance().getViewManager();
+
+    public static final Color defaultError = new Color(255,0,0,255);
 
     private GUI(){}
 
@@ -252,5 +257,11 @@ public class GUI {
     public static ImageIcon getImageIcon() {
         String discoverImagePath = String.join(File.separator, Config.ICONS_PATH, "CodeGenerator.png");
         return GUI.loadImage(discoverImagePath, "Process discovery icon", 0.1f);
+    }
+
+    public static void showErrorParsingMessage(IClassUIModel iClassUIModel, String tag, IModelElement modelElement, String message){
+        showErrorMessageDialog(viewManager.getRootFrame(), tag, message);
+        iClassUIModel.setForeground(defaultError);
+        modelElement.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
     }
 }

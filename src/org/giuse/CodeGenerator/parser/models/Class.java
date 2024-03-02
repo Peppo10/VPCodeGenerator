@@ -1,16 +1,18 @@
 package org.giuse.CodeGenerator.parser.models;
 
+import org.giuse.CodeGenerator.parser.models.statements.Assignment;
+import org.giuse.CodeGenerator.parser.models.statements.Call;
 import org.giuse.CodeGenerator.parser.models.statements.Statement;
 import org.giuse.CodeGenerator.utils.FormatUtils;
 
 import java.util.ArrayList;
 
 public class Class extends Struct implements Statement {
-    private String Extends;
+    private Struct Extends;
     private ArrayList<String> Implements;
     private Boolean isAbstract;
 
-    private Class(String pathname, Boolean isAbstract ,String scope, String name, String anExtends, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, Template template) {
+    private Class(String pathname, Boolean isAbstract ,String scope, String name, Struct anExtends, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, Template template) {
         super(pathname, scope, name, attributes, functions, innerClasses, template);
         Extends = anExtends;
         Implements = anImplements;
@@ -25,11 +27,11 @@ public class Class extends Struct implements Statement {
         isAbstract = anAbstract;
     }
 
-    public String getExtends() {
+    public Struct getExtends() {
         return Extends;
     }
 
-    public void setExtends(String anExtends) {
+    public void setExtends(Struct anExtends) {
         Extends = anExtends;
     }
 
@@ -59,8 +61,8 @@ public class Class extends Struct implements Statement {
         if(template != null)
             classContent.append(template.generateContent());
 
-        if(!getExtends().isEmpty())
-            classContent.append(" extends ").append(getExtends());
+        if(getExtends() != null)
+            classContent.append(" extends ").append(getExtends().getName());
 
         for(int i=0;i<getImplements().size();i++){
             if(i==0)
@@ -94,14 +96,13 @@ public class Class extends Struct implements Statement {
 
     public static class Builder extends Struct.Builder{
         private Boolean bIsAbstract;
-        private String bExtends;
+        private Struct bExtends;
         private final ArrayList<String> bImplements;
 
         public Builder(String pathname, String scope, String name){
             super(pathname,scope,name);
             this.bImplements = new ArrayList<>();
             this.bIsAbstract = false;
-            this.bExtends = "";
         }
 
         public Builder isAbstract(){
@@ -109,12 +110,35 @@ public class Class extends Struct implements Statement {
             return this;
         }
 
-        public Builder setExtends(String Extends){
+        public Builder setExtends(Struct Extends){
             this.bExtends = Extends;
             return this;
         }
         public Builder addImplements(String Implements){
             this.bImplements.add(Implements);
+            return this;
+        }
+
+        public Builder addConstructor(){
+            Function.Builder builder = new Function.Builder(this.bName,"public","");
+
+            if(bExtends != null) {
+                Call.Builder callBuilder = new Call.Builder("super");
+                for (Attribute attribute : bExtends.attributes){
+                    builder.addParameter(new Attribute("",attribute.getType(),attribute.getName(),""));
+                    callBuilder.addParameter(attribute.getName());
+                }
+
+                builder.addStatement(callBuilder.build());
+            }
+
+            for(Attribute attribute: this.bAttributes){
+                builder.addParameter(new Attribute("",attribute.getType(),attribute.getName(),""));
+                builder.addStatement(new Assignment("this."+attribute.getName(),attribute.getName()));
+            }
+
+            this.addFunction(builder.build());
+
             return this;
         }
 
