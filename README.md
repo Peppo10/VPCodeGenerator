@@ -2,7 +2,7 @@
 
 # Install
 * Install the release.
-* Follow the offical guide https://www.visual-paradigm.com/support/documents/vpuserguide/124/254/7041_installingpl.html
+* Follow the official guide https://www.visual-paradigm.com/support/documents/vpuserguide/124/254/7041_installingpl.html
 
 # Usage
 * For this beta version, you can use the context menu of diagram elements(Class, Package) if you want to generate specific class or package, and from ClassDiagram's context menu if you want to generate the entire diagram.
