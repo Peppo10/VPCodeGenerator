@@ -15,7 +15,6 @@ import java.io.File;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.giuse.CodeGenerator.utils.Config.PLUGIN_NAME;
@@ -100,8 +99,11 @@ public class Parser {
         Color defaultColor = iClassUIModel.getFillColor().getColor1();
 
         //inner classes
-        for(IClass innerClass: innerClasses)
-            builder.addInnerClass(parseClass(Objects.requireNonNull(getUIModelFromElement(innerClass)),null));
+        for(IClass innerClass: innerClasses){
+            IClassUIModel uiModel = getUIModelFromElement(innerClass);
+            if(uiModel != null)
+                builder.addInnerClass(parseClass(uiModel,null));
+        }
 
         //attributes
         for (IAttribute attribute : attributes)
@@ -128,7 +130,7 @@ public class Parser {
 
         //inheritance
         for(ISimpleRelationship relationship: simpleRelationshipsFrom){
-            switch (handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend)){
+            switch ( handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend)){
                 case 1:
                     return null;
                 case 2:
@@ -179,9 +181,15 @@ public class Parser {
             }
             else{
                 if(classType == ClassType.CLASS){
-                    if(!hasExtend.get()){
+                    IClassUIModel uiModel = getUIModelFromElement(to);
+
+                    if((!hasExtend.get()) && (uiModel != null)){
                         viewManager.showMessage(iClass.getName() + " extends " + to.getName(), PLUGIN_NAME);
-                        ((Class.Builder) builder).setExtends(parseClass(Objects.requireNonNull(getUIModelFromElement(to)),null));
+                        Class extended = new Class.Builder("",null,uiModel.getModelElement().getName()).build();
+
+                        extended.setAttributes(parseAttributes((IClass) uiModel.getModelElement()));
+
+                        ((Class.Builder) builder).setExtends(extended);
                         hasExtend.set(true);
                     }
                     else {
@@ -289,6 +297,16 @@ public class Parser {
         }
 
         return builder.build();
+    }
+
+    private ArrayList<Attribute> parseAttributes(IClass aClass){
+        ArrayList<Attribute> attributesList = new ArrayList<>();
+        IAttribute[] attributes = aClass.toAttributeArray();
+
+        for(IAttribute attribute: attributes)
+            attributesList.add(parseAttribute(attribute));
+
+        return attributesList;
     }
 
     private Attribute parseAttribute(IAttribute attribute){

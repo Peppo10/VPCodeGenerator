@@ -37,6 +37,10 @@ public class Struct extends File implements Statement {
         this.name = name;
     }
 
+    public void setAttributes(ArrayList<Attribute> attributes) {
+        this.attributes = attributes;
+    }
+
     @Override
     public String generateJava(int indentation) {
         //not implemented in java
