@@ -14,6 +14,10 @@ public class FormatUtils {
         return string.matches(CAPS_LOCK_REGEX);
     }
 
+    public static String getIndentation(int indentation){
+        return "\t".repeat(indentation);
+    }
+
     public static String getFixedArrayLength(String array){
         Matcher matcher = Pattern.compile(FIXED_ARRAY_REGEX).matcher(array);
         String number;
@@ -46,8 +50,6 @@ public class FormatUtils {
     }
     public static String toJavaType(String vpType){
         String firstFormat = firstUpperFormat(vpType);
-
-        //Boolean Byte Char Double Float Int Long Short String Void
 
         switch (firstFormat){
             case "Void":

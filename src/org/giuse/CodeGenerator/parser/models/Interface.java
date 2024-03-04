@@ -1,12 +1,15 @@
 package org.giuse.CodeGenerator.parser.models;
 
+import org.giuse.CodeGenerator.parser.models.statements.Statement;
+import org.giuse.CodeGenerator.utils.FormatUtils;
+
 import java.util.ArrayList;
 
-public class Interface extends Struct{
+public class Interface extends Struct implements Statement{
     private ArrayList<String> Extends;
 
-    public Interface(String pathname, String scope, String name, ArrayList<String> anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions, Template template) {
-        super(pathname, scope, name, attributes, functions, template);
+    private Interface(String pathname, String scope, String name, ArrayList<String> anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, Template template) {
+        super(pathname, scope, name, attributes, functions, innerClasses, template);
         Extends = anExtends;
     }
 
@@ -18,8 +21,12 @@ public class Interface extends Struct{
         Extends = anExtends;
     }
 
-    public String generateContent() {
+    @Override
+    public String generateJava(int indentation) {
         StringBuilder interfaceContent = new StringBuilder();
+        String formattedIndentation = FormatUtils.getIndentation(indentation);
+
+        interfaceContent.append(formattedIndentation);
 
         if((super.scope != null) && (!super.scope.isEmpty()))
             interfaceContent.append(super.scope).append(" ");
@@ -39,18 +46,22 @@ public class Interface extends Struct{
         interfaceContent.append("{");
 
         for(Attribute attribute: super.attributes){
-            interfaceContent.append("\n\t");
-            interfaceContent.append(attribute.generateContent());
+            interfaceContent.append("\n");
+            interfaceContent.append(attribute.generateJava(indentation+1));
             interfaceContent.append(";\n");
         }
 
         for(Function function: super.functions){
-            interfaceContent.append("\n\t");
-            interfaceContent.append(function.generateContent());
+            interfaceContent.append("\n");
+            interfaceContent.append(function.generateJava(indentation+1));
             interfaceContent.append("\n");
         }
 
-        interfaceContent.append("}");
+        for(Struct struct: innerClasses){
+            interfaceContent.append("\n").append(struct.generateJava(indentation+1)).append("\n");
+        }
+
+        interfaceContent.append(formattedIndentation).append("}");
 
         return interfaceContent.toString();
     }
@@ -60,7 +71,6 @@ public class Interface extends Struct{
 
         public Builder(String pathname, String scope, String name){
             super(pathname,scope,name);
-
             this.bExtends = new ArrayList<>();
         }
 
@@ -70,7 +80,7 @@ public class Interface extends Struct{
         }
 
         public Interface build(){
-            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bTemplate);
+            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bInnerClasses, bTemplate);
         }
     }
 }

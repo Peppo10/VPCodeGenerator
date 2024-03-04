@@ -1,4 +1,5 @@
 package org.giuse.CodeGenerator.parser;
+import com.vp.plugin.action.VPContext;
 import com.vp.plugin.diagram.*;
 import com.vp.plugin.diagram.shape.IClassUIModel;
 import com.vp.plugin.diagram.shape.IPackageUIModel;
@@ -10,9 +11,11 @@ import org.giuse.CodeGenerator.parser.models.Package;
 import org.giuse.CodeGenerator.utils.FormatUtils;
 import org.giuse.CodeGenerator.utils.GUI;
 import java.awt.*;
+import java.io.File;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.giuse.CodeGenerator.utils.Config.PLUGIN_NAME;
 import static org.giuse.CodeGenerator.utils.GUI.viewManager;
@@ -21,24 +24,27 @@ public class Parser {
     private enum ClassType{CLASS,INTERFACE,ENUM}
     public static final String TAG = "Parser";
     Codebase codebase;
-    private static Parser INSTANCE;
 
+    VPContext context;
+    private static Parser INSTANCE;
     public static String DEFAULT_PATH;
 
-    public static Parser getInstance(String name, String choosePath){
+    public static Parser getInstance(VPContext context, String choosePath){
         //TODO Config.UpdateProperty("actions.generate_code.default_path",choosePath);
+        String name = context.getDiagram().getName();
 
         DEFAULT_PATH = choosePath;
 
         if(INSTANCE == null)
-            INSTANCE = new Parser(name);
+            INSTANCE = new Parser(context, name);
 
         INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
 
         return INSTANCE;
     }
 
-    private Parser(String name){
+    private Parser(VPContext context, String name){
+        this.context = context;
         this.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
     }
 
@@ -50,7 +56,7 @@ public class Parser {
         String optionalPackagePath;
         IClass iClass = (IClass) iClassUIModel.getModelElement();
         ClassType classType;
-        boolean hasExtend = false;
+        AtomicBoolean hasExtend = new AtomicBoolean(false);
         Struct.Builder builder;
 
         if(packagePath == null){
@@ -68,15 +74,15 @@ public class Parser {
         }
 
         if(iClass.hasStereotype("Interface")){
-            builder = new Interface.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
+            builder = new Interface.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.INTERFACE;
         }
         else if(iClass.hasStereotype("Enum")){
-            builder = new Enum.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
+            builder = new Enum.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.ENUM;
         }
         else{
-            builder = new Class.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", "public", iClass.getName());
+            builder = new Class.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.CLASS;
         }
 
@@ -89,124 +95,187 @@ public class Parser {
         IRelationshipEnd[] relationshipsTo = iClass.toToRelationshipEndArray();
         ISimpleRelationship[] simpleRelationshipsFrom = iClass.toFromRelationshipArray();
         ITemplateParameter[] templateParameters = iClass.toTemplateParameterArray();
+        IClass[] innerClasses = iClass.toClassArray();
         Color defaultColor = iClassUIModel.getFillColor().getColor1();
-        Color defaultError = new Color(255,0,0,255);
 
-        for (IAttribute attribute : attributes) {
-            Attribute parsedAttribute = parseAttribute(attribute);
-
-            if(parsedAttribute != null){
-                if(classType != ClassType.ENUM)
-                    builder.addAttribute(parsedAttribute);
-                else{
-                    if(FormatUtils.isCapsLock(parsedAttribute.getName()))
-                        ((Enum.Builder)builder).addPairs(parsedAttribute.getName(), parsedAttribute.getInitializer());
-                    else
-                        builder.addAttribute(parsedAttribute);
-                }
-            }
-            else{
-                ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(attribute,true);
-                attributeColor.setBackground(defaultError);
-                attribute.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
-                return null;
-            }
+        //inner classes
+        for(IClass innerClass: innerClasses){
+            IClassUIModel uiModel = getUIModelFromElement(innerClass);
+            if(uiModel != null)
+                builder.addInnerClass(parseClass(uiModel,null));
         }
 
-        for (IOperation operation : operations) {
-            Function parsedFunction = parseFunction(operation);
-
-            if(parsedFunction != null){
-                if((classType == ClassType.INTERFACE))
-                    parsedFunction.setVirtual(true);
-
-                builder.addFunction(parsedFunction);
-            }
-            else{
-                ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(operation,true);
-                attributeColor.setBackground(defaultError);
-
-                for(IParameter parameter :operation.toParameterArray())
-                    parameter.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
-
-                operation.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+        //attributes
+        for (IAttribute attribute : attributes)
+            if(!handleAttributeParsing(attribute,iClassUIModel,builder,classType,defaultColor))
                 return null;
-            }
-        }
 
+        //functions
+        for (IOperation operation : operations)
+            if(!handleFunctionParsing(operation, iClassUIModel, builder, classType, defaultColor))
+                return null;
+
+        //template
         if( (templateParameters != null) && (classType != ClassType.ENUM) )
             builder.hasTemplate(parseTemplate(templateParameters));
 
-        for(IRelationshipEnd relationship: relationshipsFrom){
-            IEndRelationship endRelationship = relationship.getEndRelationship();
+        //attributes from relations
+        for(IRelationshipEnd relationship: relationshipsFrom)
+            if(!handleEndRelationshipParsing(relationship,iClassUIModel,builder,IAssociation.DIRECTION_FROM_TO))
+                return null;
 
-            if(endRelationship instanceof IAssociation){
-                Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_FROM_TO);
-                if(parsedAssociation != null)
-                    builder.addAttribute(parsedAssociation);
-                else{
-                    iClassUIModel.setForeground(defaultError);
-                    endRelationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
-                    return null;
-                }
-            }
-        }
+        for(IRelationshipEnd relationship: relationshipsTo)
+            if(!handleEndRelationshipParsing(relationship,iClassUIModel,builder,IAssociation.DIRECTION_TO_FROM))
+                return null;
 
-        for(IRelationshipEnd relationship: relationshipsTo){
-            IEndRelationship endRelationship = relationship.getEndRelationship();
-
-            if(endRelationship instanceof IAssociation){
-                Attribute parsedAssociation = parseAssociation(relationship, IAssociation.DIRECTION_TO_FROM);
-                if(parsedAssociation != null)
-                    builder.addAttribute(parsedAssociation);
-                else{
-                    iClassUIModel.setForeground(defaultError);
-                    endRelationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
-                    return null;
-                }
-            }
-        }
-
+        //inheritance
         for(ISimpleRelationship relationship: simpleRelationshipsFrom){
-            if (relationship instanceof IGeneralization) {
-                IModelElement to = relationship.getTo();
-
-                if(to.hasStereotype("Interface")){
-                    viewManager.showMessage(iClass.getName() + " implements " + to.getName(), PLUGIN_NAME);
-
-                    if(classType == ClassType.INTERFACE)
-                        ((Interface.Builder) builder).addExtends(to.getName());
-                    else if (classType == ClassType.CLASS) {
-                        ((Class.Builder) builder).addImplements(to.getName());
-                    }
-                    else
-                        ((Enum.Builder) builder).addImplements(to.getName());
-                }
-                else{
-                    if(classType == ClassType.CLASS){
-                        if(!hasExtend){
-                            viewManager.showMessage(iClass.getName() + " extends " + to.getName(), PLUGIN_NAME);
-                            ((Class.Builder) builder).setExtends(to.getName());
-                            hasExtend = true;
-                        }
-                        else {
-                            GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, iClass.getName() + " cannot extends multiple classes");
-                            iClassUIModel.setForeground(defaultError);
-                            relationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
-                            return null;
-                        }
-                    }
-                    else{
-                        GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, iClass.getName() + " cannot extends classes");
-                        iClassUIModel.setForeground(defaultError);
-                        relationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
-                        return null;
-                    }
-                }
+            switch ( handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend)){
+                case 1:
+                    return null;
+                case 2:
+                    continue;
+                default:
             }
         }
 
         return builder.addConstructor().build();
+    }
+
+    private Integer handleSimpleRelationshipParsing(ISimpleRelationship relationship, IClass iClass, Struct.Builder builder, ClassType classType, IClassUIModel iClassUIModel, Color defaultColor, AtomicBoolean hasExtend){
+        if (relationship instanceof IGeneralization) {
+            IModelElement to = relationship.getTo();
+
+            if(!(to instanceof IClass))
+                return 2; //should step on next iteration
+
+            if(to.hasStereotype("Interface")){
+                viewManager.showMessage(iClass.getName() + " implements " + to.getName(), PLUGIN_NAME);
+
+                if(classType == ClassType.INTERFACE)
+                    ((Interface.Builder) builder).addExtends(to.getName());
+                else if (classType == ClassType.CLASS)
+                    ((Class.Builder) builder).addImplements(to.getName());
+                else
+                    ((Enum.Builder) builder).addImplements(to.getName());
+
+                for(IOperation function: ((IClass) to).toOperationArray()){
+                    Function parsedFunction = parseFunction(function);
+
+                    if(parsedFunction != null){
+                        parsedFunction.setOverride(true);
+
+                        builder.addFunction(parsedFunction);
+                    }
+                    else{
+                        ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(function,true);
+                        attributeColor.setBackground(GUI.defaultError);
+
+                        for(IParameter parameter :function.toParameterArray())
+                            parameter.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+
+                        function.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+                        return 1;
+                    }
+                }
+            }
+            else{
+                if(classType == ClassType.CLASS){
+                    IClassUIModel uiModel = getUIModelFromElement(to);
+
+                    if((!hasExtend.get()) && (uiModel != null)){
+                        viewManager.showMessage(iClass.getName() + " extends " + to.getName(), PLUGIN_NAME);
+                        Class extended = new Class.Builder("",null,uiModel.getModelElement().getName()).build();
+
+                        extended.setAttributes(parseAttributes((IClass) uiModel.getModelElement()));
+
+                        ((Class.Builder) builder).setExtends(extended);
+                        hasExtend.set(true);
+                    }
+                    else {
+                        GUI.showErrorParsingMessage(iClassUIModel,TAG,relationship, iClass.getName() + " cannot extends multiple classes");
+                        return 1;
+                    }
+                }
+                else{
+                    GUI.showErrorParsingMessage(iClassUIModel,TAG,relationship, iClass.getName() + " cannot extends classes");
+                    return 1;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    private IClassUIModel getUIModelFromElement(IModelElement element){
+        for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray())
+            if(shapeUIModel instanceof IClassUIModel && (shapeUIModel.getModelElement().getId().compareTo(element.getId()) == 0))
+                return (IClassUIModel)shapeUIModel;
+
+        return null;
+    }
+
+    private Boolean handleFunctionParsing(IOperation operation, IClassUIModel iClassUIModel, Struct.Builder builder, ClassType classType, Color defaultColor){
+        Function parsedFunction = parseFunction(operation);
+
+        if(parsedFunction != null){
+            if((classType == ClassType.INTERFACE))
+                parsedFunction.setVirtual(true);
+
+            builder.addFunction(parsedFunction);
+        }
+        else{
+            ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(operation,true);
+            attributeColor.setBackground(GUI.defaultError);
+
+            for(IParameter parameter :operation.toParameterArray())
+                parameter.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+
+            operation.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+            return false;
+        }
+
+        return true;
+    }
+
+    private Boolean handleEndRelationshipParsing(IRelationshipEnd relationship, IClassUIModel iClassUIModel, Struct.Builder builder, int direction){
+        IEndRelationship endRelationship = relationship.getEndRelationship();
+
+        if(endRelationship instanceof IAssociation){
+            Attribute parsedAssociation = parseAssociation(relationship, direction);
+            if(parsedAssociation != null)
+                builder.addAttribute(parsedAssociation);
+            else{
+                iClassUIModel.setForeground(GUI.defaultError);
+                endRelationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Boolean handleAttributeParsing(IAttribute attribute, IClassUIModel iClassUIModel, Struct.Builder builder, ClassType classType, Color defaultColor){
+        Attribute parsedAttribute = parseAttribute(attribute);
+
+        if(parsedAttribute != null){
+            if(classType != ClassType.ENUM)
+                builder.addAttribute(parsedAttribute);
+            else{
+                if(FormatUtils.isCapsLock(parsedAttribute.getName()))
+                    ((Enum.Builder)builder).addPairs(parsedAttribute.getName(), parsedAttribute.getInitializer());
+                else
+                    builder.addAttribute(parsedAttribute);
+            }
+        }
+        else{
+            ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(attribute,true);
+            attributeColor.setBackground(GUI.defaultError);
+            attribute.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
+            return false;
+        }
+
+        return true;
     }
 
     private Template parseTemplate(ITemplateParameter[] parameters) {
@@ -228,6 +297,16 @@ public class Parser {
         }
 
         return builder.build();
+    }
+
+    private ArrayList<Attribute> parseAttributes(IClass aClass){
+        ArrayList<Attribute> attributesList = new ArrayList<>();
+        IAttribute[] attributes = aClass.toAttributeArray();
+
+        for(IAttribute attribute: attributes)
+            attributesList.add(parseAttribute(attribute));
+
+        return attributesList;
     }
 
     private Attribute parseAttribute(IAttribute attribute){
@@ -392,7 +471,6 @@ public class Parser {
                     codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel));
             }
             else if(modelElement instanceof IClass){
-                viewManager.showMessage(modelElement.getParent().getModelType(), TAG);
                 if(modelElement.getParent() instanceof IModel){
                     codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
                 }
@@ -401,7 +479,7 @@ public class Parser {
     }
 
     public void parseSingleClass(IClassUIModel iClass){
-        Class aClass = (Class) parseClass(iClass,null);
+        File aClass = parseClass(iClass,null);
 
         codebase.addFile(aClass);
     }

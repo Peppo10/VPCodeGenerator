@@ -66,21 +66,21 @@ public class Generator {
     private static void generateEnum(Enum file) throws IOException {
         file.createNewFile();
         FileWriter myWriter = new FileWriter(file.getAbsolutePath());
-        myWriter.write(file.generateContent());
+        myWriter.write(file.generateJava(0));
         myWriter.close();
     }
 
     private static void generateInterface(Interface file) throws IOException {
         file.createNewFile();
         FileWriter myWriter = new FileWriter(file.getAbsolutePath());
-        myWriter.write(file.generateContent());
+        myWriter.write(file.generateJava(0));
         myWriter.close();
     }
 
     private static void generateClass(Class file) throws IOException {
         file.createNewFile();
         FileWriter myWriter = new FileWriter(file.getAbsolutePath());
-        myWriter.write(file.generateContent());
+        myWriter.write(file.generateJava(0));
         myWriter.close();
     }
 }

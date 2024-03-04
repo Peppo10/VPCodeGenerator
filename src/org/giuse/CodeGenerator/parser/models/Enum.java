@@ -1,16 +1,19 @@
 package org.giuse.CodeGenerator.parser.models;
 
+import org.giuse.CodeGenerator.parser.models.statements.Statement;
+import org.giuse.CodeGenerator.utils.FormatUtils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class Enum extends Struct{
+public class Enum extends Struct implements Statement {
     Map<String, String> pairs;
     private final ArrayList<String> Implements;
 
-    private Enum(Map<String, String> pairs, String pathname ,String scope, String name, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions) {
-        super(pathname, scope, name, attributes, functions, null);
+    private Enum(Map<String, String> pairs, String pathname ,String scope, String name, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses) {
+        super(pathname, scope, name, attributes, functions, innerClasses, null);
         this.pairs = pairs;
         Implements = anImplements;
     }
@@ -22,8 +25,12 @@ public class Enum extends Struct{
     public Map<String, String> getPairs() {
         return pairs;
     }
-    public String generateContent() {
+    @Override
+    public String generateJava(int indentation) {
         StringBuilder enumContent = new StringBuilder();
+        String formattedIndentation = FormatUtils.getIndentation(indentation);
+
+        enumContent.append(formattedIndentation);
 
         if((super.scope!= null) && (!super.scope.isEmpty()))
             enumContent.append(super.scope).append(" ");
@@ -43,7 +50,7 @@ public class Enum extends Struct{
 
         first.ifPresent(value ->
             {
-                enumContent.append("\n\t");
+                enumContent.append("\n").append(formattedIndentation);
 
                 pairs.forEach((s, s2) -> {
                     if (s.compareTo(value) != 0)
@@ -57,24 +64,28 @@ public class Enum extends Struct{
         );
 
         for(Attribute attribute: super.attributes){
-            enumContent.append("\n\t");
-            enumContent.append(attribute.generateContent());
+            enumContent.append("\n");
+            enumContent.append(attribute.generateJava(indentation+1));
             enumContent.append(";\n");
         }
 
         for(Function function: super.functions){
-            enumContent.append("\n\t");
-            enumContent.append(function.generateContent());
+            enumContent.append("\n");
+            enumContent.append(function.generateJava(indentation+1));
             enumContent.append("\n");
         }
 
-        enumContent.append("}");
+        for(Struct struct: innerClasses){
+            enumContent.append("\n").append(struct.generateJava(indentation+1)).append("\n");
+        }
+
+        enumContent.append(formattedIndentation).append("}");
 
         return enumContent.toString();
     }
 
     public static class Builder extends Struct.Builder{
-        Map<String, String> bPairs;
+        private final Map<String, String> bPairs;
         private final ArrayList<String> bImplements;
 
         public Builder(String pathname, String scope, String name){
@@ -93,7 +104,7 @@ public class Enum extends Struct{
         }
 
         public Enum build(){
-            return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions);
+            return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions, bInnerClasses);
         }
     }
 }
