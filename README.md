@@ -1,8 +1,14 @@
 ![logo](https://github.com/Peppo10/VPCodeGenerator/assets/131891564/12dc6547-7e9b-450f-bd82-47fcadb5df66)
 
 # Install
-* Install the release.
-* Follow the official guide https://www.visual-paradigm.com/support/documents/vpuserguide/124/254/7041_installingpl.html
+1. From release
+   * Install the release.
+   * Follow the official guide https://www.visual-paradigm.com/support/documents/vpuserguide/124/254/7041_installingpl.html
+
+2. From source code
+   * Compile the source on **IntelliJ IDEA using JDK 11**
+   * run `.\import_plugin.bat`
+   
 
 # Usage
 * For this beta version, you can use the context menu of diagram elements(Class, Package) if you want to generate specific class or package, and from ClassDiagram's context menu if you want to generate the entire diagram.
