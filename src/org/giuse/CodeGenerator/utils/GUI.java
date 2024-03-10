@@ -3,13 +3,11 @@ package org.giuse.CodeGenerator.utils;
 import com.vp.plugin.ApplicationManager;
 import com.vp.plugin.ViewManager;
 import com.vp.plugin.diagram.shape.IClassUIModel;
-import com.vp.plugin.model.IClass;
 import com.vp.plugin.model.IModelElement;
 import com.vp.plugin.view.IDialog;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -198,25 +196,6 @@ public class GUI {
                 disableTextFields((Container) component);
             }
         }
-    }
-
-    @SuppressWarnings("unused")
-    public static JFileChooser createSelectFileChooser(String title, boolean multiple, FileFilter... fileFilters) {
-        String fullTitle = String.join(" - ", Config.PLUGIN_NAME, title);
-        JFileChooser fileChooser = viewManager.createJFileChooser();
-
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-
-        for (FileFilter fileFilter : fileFilters)
-            fileChooser.addChoosableFileFilter(fileFilter);
-
-        fileChooser.setFileFilter(fileFilters[0]);
-        fileChooser.setMultiSelectionEnabled(multiple);
-        fileChooser.setDialogTitle(fullTitle);
-        fileChooser.setToolTipText(fullTitle);
-        fileChooser.setApproveButtonText("Select");
-        fileChooser.setApproveButtonToolTipText(fullTitle);
-        return fileChooser;
     }
 
     public static JFileChooser createGeneratorFileChooser(String title) {

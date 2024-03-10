@@ -55,6 +55,9 @@ public class Parser {
     private Struct parseClass(IClassUIModel iClassUIModel, String packagePath){
         String optionalPackagePath;
         IClass iClass = (IClass) iClassUIModel.getModelElement();
+
+        //endRelationship.getMasterView().getDiagramUIModel().getName()
+        
         ClassType classType;
         AtomicBoolean hasExtend = new AtomicBoolean(false);
         Struct.Builder builder;
@@ -242,6 +245,9 @@ public class Parser {
         IEndRelationship endRelationship = relationship.getEndRelationship();
 
         if(endRelationship instanceof IAssociation){
+            String aggregationKind = relationship.getModelPropertyByName("aggregationKind").getValueAsString();
+            //TODO aggregation switch here
+
             Attribute parsedAssociation = parseAssociation(relationship, direction);
             if(parsedAssociation != null)
                 builder.addAttribute(parsedAssociation);
