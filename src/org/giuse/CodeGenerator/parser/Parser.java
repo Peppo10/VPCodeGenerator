@@ -52,11 +52,21 @@ public class Parser {
         return this.codebase;
     }
 
-    private Struct parseClass(IClassUIModel iClassUIModel, String packagePath){
+    private Struct parseClassWithParent(IClassUIModel iClassUIModel, String packagePath){
+        return parseClass(iClassUIModel, packagePath, true);
+    }
+
+    private Struct parseClassWithoutParent(IClassUIModel iClassUIModel){
+        return parseClass(iClassUIModel, null, false);
+    }
+
+    private Struct parseClass(IClassUIModel iClassUIModel, String packagePath, Boolean parseParent){
         String optionalPackagePath;
         IClass iClass = (IClass) iClassUIModel.getModelElement();
 
         //endRelationship.getMasterView().getDiagramUIModel().getName()
+
+        viewManager.showMessage(packagePath);
         
         ClassType classType;
         AtomicBoolean hasExtend = new AtomicBoolean(false);
@@ -67,7 +77,7 @@ public class Parser {
             IModelElement parentModel = parent != null ? parent.getModelElement() : null;
             Package parentPackage = null;
 
-            if(parentModel instanceof IPackage)
+            if(parentModel instanceof IPackage && parseParent)
                 parentPackage = parsePackageBottomUp((IPackageUIModel) parent);
 
             optionalPackagePath = parentPackage != null ? parentPackage.getPathname() : codebase.getPathname();
@@ -101,13 +111,6 @@ public class Parser {
         IClass[] innerClasses = iClass.toClassArray();
         Color defaultColor = iClassUIModel.getFillColor().getColor1();
 
-        //inner classes
-        for(IClass innerClass: innerClasses){
-            IClassUIModel uiModel = getUIModelFromElement(innerClass);
-            if(uiModel != null)
-                builder.addInnerClass(parseClass(uiModel,null));
-        }
-
         //attributes
         for (IAttribute attribute : attributes)
             if(!handleAttributeParsing(attribute,iClassUIModel,builder,classType,defaultColor))
@@ -119,35 +122,56 @@ public class Parser {
                 return null;
 
         //template
-        if( (templateParameters != null) && (classType != ClassType.ENUM) )
-            builder.hasTemplate(parseTemplate(templateParameters));
+        if((templateParameters != null) && (classType != ClassType.ENUM))
+            builder.setTemplate(parseTemplate(templateParameters));
 
-        //attributes from relations
-        for(IRelationshipEnd relationship: relationshipsFrom)
-            if(!handleEndRelationshipParsing(relationship,iClassUIModel,builder,IAssociation.DIRECTION_FROM_TO))
-                return null;
+        if(packagePath != null){
+            //inner classes
+            for(IClass innerClass: innerClasses){
+                IClassUIModel uiModel = getUIModelFromElement(innerClass);
+                if(uiModel != null){
+                    Struct parsedInnerClass = parseClassWithoutParent(uiModel);
+                    if((parsedInnerClass != null) && (parsedInnerClass.getAbsolutePath().startsWith(packagePath)))
+                        builder.addInnerClass(parsedInnerClass);
+                }
+            }
 
-        for(IRelationshipEnd relationship: relationshipsTo)
-            if(!handleEndRelationshipParsing(relationship,iClassUIModel,builder,IAssociation.DIRECTION_TO_FROM))
-                return null;
-
-        //inheritance
-        for(ISimpleRelationship relationship: simpleRelationshipsFrom){
-            switch ( handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend)){
-                case 1:
+            //attributes from relations
+            for(IRelationshipEnd relationship: relationshipsFrom)
+                if(!handleEndRelationshipParsing(relationship,iClassUIModel,builder,IAssociation.DIRECTION_FROM_TO, packagePath))
                     return null;
-                case 2:
-                    continue;
-                default:
+
+            for(IRelationshipEnd relationship: relationshipsTo)
+                if(!handleEndRelationshipParsing(relationship,iClassUIModel,builder,IAssociation.DIRECTION_TO_FROM, packagePath))
+                    return null;
+
+            //inheritance
+            for(ISimpleRelationship relationship: simpleRelationshipsFrom){
+                switch ( handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend,packagePath)){
+                    case 1:
+                        return null;
+                    case 2:
+                        continue;
+                    default:
+                }
             }
         }
 
         return builder.addConstructor().build();
     }
 
-    private Integer handleSimpleRelationshipParsing(ISimpleRelationship relationship, IClass iClass, Struct.Builder builder, ClassType classType, IClassUIModel iClassUIModel, Color defaultColor, AtomicBoolean hasExtend){
+    private Integer handleSimpleRelationshipParsing(ISimpleRelationship relationship, IClass iClass, Struct.Builder builder, ClassType classType, IClassUIModel iClassUIModel, Color defaultColor, AtomicBoolean hasExtend, String packagePath){
         if (relationship instanceof IGeneralization) {
             IModelElement to = relationship.getTo();
+
+            IClassUIModel uiModel = getUIModelFromElement(to);
+
+            if (uiModel != null) {
+                Struct parsedClass = parseClassWithoutParent(uiModel);
+
+                if ((parsedClass == null) || (!parsedClass.getAbsolutePath().startsWith(packagePath)))
+                    return 2;
+            }
 
             if(!(to instanceof IClass))
                 return 2; //should step on next iteration
@@ -184,13 +208,13 @@ public class Parser {
             }
             else{
                 if(classType == ClassType.CLASS){
-                    IClassUIModel uiModel = getUIModelFromElement(to);
+                    IClassUIModel classUIModel = getUIModelFromElement(to);
 
-                    if((!hasExtend.get()) && (uiModel != null)){
+                    if((!hasExtend.get()) && (classUIModel != null)){
                         viewManager.showMessage(iClass.getName() + " extends " + to.getName(), PLUGIN_NAME);
-                        Class extended = new Class.Builder("",null,uiModel.getModelElement().getName()).build();
+                        Class extended = new Class.Builder("",null,classUIModel.getModelElement().getName()).build();
 
-                        extended.setAttributes(parseAttributes((IClass) uiModel.getModelElement()));
+                        extended.setAttributes(parseAttributes((IClass) classUIModel.getModelElement()));
 
                         ((Class.Builder) builder).setExtends(extended);
                         hasExtend.set(true);
@@ -241,7 +265,7 @@ public class Parser {
         return true;
     }
 
-    private Boolean handleEndRelationshipParsing(IRelationshipEnd relationship, IClassUIModel iClassUIModel, Struct.Builder builder, int direction){
+    private Boolean handleEndRelationshipParsing(IRelationshipEnd relationship, IClassUIModel iClassUIModel, Struct.Builder builder, int direction, String packagePath){
         IEndRelationship endRelationship = relationship.getEndRelationship();
 
         if(endRelationship instanceof IAssociation){
@@ -249,8 +273,16 @@ public class Parser {
             //TODO aggregation switch here
 
             Attribute parsedAssociation = parseAssociation(relationship, direction);
-            if(parsedAssociation != null)
-                builder.addAttribute(parsedAssociation);
+            if(parsedAssociation != null) {
+                IClassUIModel uiModel = getUIModelFromElement(getToModelElement(relationship, direction));
+
+                if (uiModel != null) {
+                    Struct parsedClass = parseClassWithoutParent(uiModel);
+
+                    if ((parsedClass != null) && (parsedClass.getAbsolutePath().startsWith(packagePath)))
+                        builder.addAttribute(parsedAssociation);
+                }
+            }
             else{
                 iClassUIModel.setForeground(GUI.defaultError);
                 endRelationship.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
@@ -358,6 +390,30 @@ public class Parser {
         }
     }
 
+    private IModelElement getToModelElement(IRelationshipEnd relationshipEnd, int direction){
+        if(direction == IAssociation.DIRECTION_FROM_TO){
+            return relationshipEnd.getEndRelationship().getTo();
+        }
+        else if(direction == IAssociation.DIRECTION_TO_FROM){
+            return relationshipEnd.getEndRelationship().getFrom();
+        }
+        else{
+            throw new InvalidParameterException("direction parameter must be in range [0,1]");
+        }
+    }
+
+    private IModelElement getFromModelElement(IRelationshipEnd relationshipEnd, int direction){
+        if(direction == IAssociation.DIRECTION_FROM_TO){
+            return relationshipEnd.getEndRelationship().getFrom();
+        }
+        else if(direction == IAssociation.DIRECTION_TO_FROM){
+            return relationshipEnd.getEndRelationship().getTo();
+        }
+        else{
+            throw new InvalidParameterException("direction parameter must be in range [0,1]");
+        }
+    }
+
     private Attribute parseAssociation(IRelationshipEnd association, int direction){
         String toMultiplicity = ((IAssociationEnd) association.getOppositeEnd()).getMultiplicity();
         String fromMultiplicity = ((IAssociationEnd) association).getMultiplicity();
@@ -370,18 +426,8 @@ public class Parser {
         }
 
         IModelElement from, to;
-
-        if(direction == IAssociation.DIRECTION_FROM_TO){
-            from = association.getEndRelationship().getFrom();
-            to = association.getEndRelationship().getTo();
-        }
-        else if(direction == IAssociation.DIRECTION_TO_FROM){
-            from = association.getEndRelationship().getTo();
-            to = association.getEndRelationship().getFrom();
-        }
-        else{
-            throw new InvalidParameterException("direction parameter must be in range [0,1]");
-        }
+        from = getFromModelElement(association, direction);
+        to = getToModelElement(association, direction);
 
         if(toMultiplicity.compareTo("Unspecified") == 0){
             GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, from.getName() + " has no multiplicity specified for " + to.getName());
@@ -427,7 +473,7 @@ public class Parser {
             IModelElement iModelElement = shapeUIModel.getModelElement();
 
             if(iModelElement instanceof IClass)
-                aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
+                aPackage.addFile(parseClassWithParent((IClassUIModel) shapeUIModel, aPackage.getPathname()));
             else if (iModelElement instanceof IPackage)
                 parsePackageTopDown((IPackageUIModel) shapeUIModel, aPackage);
         }
@@ -460,7 +506,7 @@ public class Parser {
             IModelElement iModelElement = shapeUIModel.getModelElement();
 
             if(iModelElement instanceof IClass)
-                aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
+                aPackage.addFile(parseClassWithParent((IClassUIModel) shapeUIModel, aPackage.getPathname()));
             else if (iModelElement instanceof IPackage)
                 parsePackageTopDown((IPackageUIModel) shapeUIModel, aPackage);
         }
@@ -478,14 +524,14 @@ public class Parser {
             }
             else if(modelElement instanceof IClass){
                 if(modelElement.getParent() instanceof IModel){
-                    codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
+                    codebase.addFile(parseClassWithParent((IClassUIModel) shapeUIModel, codebase.getPathname()));
                 }
             }
         }
     }
 
     public void parseSingleClass(IClassUIModel iClass){
-        File aClass = parseClass(iClass,null);
+        File aClass = parseClassWithParent(iClass,null);
 
         codebase.addFile(aClass);
     }

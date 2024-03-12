@@ -7,13 +7,9 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
 
-import static org.giuse.CodeGenerator.utils.GUI.viewManager;
-
-class CheckBoxNodeRenderer extends DefaultTreeCellRenderer {
+class CheckBoxNodeTreeRender extends DefaultTreeCellRenderer {
     private JCheckBox checkBox = new JCheckBox();
-
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component renderer = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 

@@ -40,10 +40,10 @@ public class GenerateDialogHandler implements IDialogHandler {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
         // Create a custom renderer for checkboxes
-        tree.setCellRenderer(new CheckBoxNodeRenderer());
+        tree.setCellRenderer(new CheckBoxNodeTreeRender());
 
         // Add mouse listener to handle checkbox selection
-        tree.addMouseListener(new CheckBoxNodeRenderer.CheckBoxNodeListener());
+        tree.addMouseListener(new CheckBoxNodeTreeRender.CheckBoxNodeListener());
 
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setPreferredSize(new Dimension(500,500));

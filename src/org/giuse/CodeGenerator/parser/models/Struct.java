@@ -80,7 +80,7 @@ public class Struct extends File implements Statement {
             return this;
         }
 
-        public Builder hasTemplate(Template template){
+        public Builder setTemplate(Template template){
             this.bTemplate = template;
             return this;
         }
