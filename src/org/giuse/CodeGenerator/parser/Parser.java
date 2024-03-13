@@ -24,7 +24,6 @@ public class Parser {
     private enum ClassType{CLASS,INTERFACE,ENUM}
     public static final String TAG = "Parser";
     Codebase codebase;
-
     VPContext context;
     private static Parser INSTANCE;
     public static String DEFAULT_PATH;
@@ -65,8 +64,6 @@ public class Parser {
         IClass iClass = (IClass) iClassUIModel.getModelElement();
 
         //endRelationship.getMasterView().getDiagramUIModel().getName()
-
-        viewManager.showMessage(packagePath);
         
         ClassType classType;
         AtomicBoolean hasExtend = new AtomicBoolean(false);
@@ -128,7 +125,7 @@ public class Parser {
         if(packagePath != null){
             //inner classes
             for(IClass innerClass: innerClasses){
-                IClassUIModel uiModel = getUIModelFromElement(innerClass);
+                IClassUIModel uiModel = (IClassUIModel) getUIModelFromElement(innerClass);
                 if(uiModel != null){
                     Struct parsedInnerClass = parseClassWithoutParent(uiModel);
                     if((parsedInnerClass != null) && (parsedInnerClass.getAbsolutePath().startsWith(packagePath)))
@@ -164,7 +161,7 @@ public class Parser {
         if (relationship instanceof IGeneralization) {
             IModelElement to = relationship.getTo();
 
-            IClassUIModel uiModel = getUIModelFromElement(to);
+            IClassUIModel uiModel = (IClassUIModel) getUIModelFromElement(to);
 
             if (uiModel != null) {
                 Struct parsedClass = parseClassWithoutParent(uiModel);
@@ -208,7 +205,7 @@ public class Parser {
             }
             else{
                 if(classType == ClassType.CLASS){
-                    IClassUIModel classUIModel = getUIModelFromElement(to);
+                    IClassUIModel classUIModel = (IClassUIModel) getUIModelFromElement(to);
 
                     if((!hasExtend.get()) && (classUIModel != null)){
                         viewManager.showMessage(iClass.getName() + " extends " + to.getName(), PLUGIN_NAME);
@@ -234,10 +231,10 @@ public class Parser {
         return 0;
     }
 
-    private IClassUIModel getUIModelFromElement(IModelElement element){
+    private IShapeUIModel getUIModelFromElement(IModelElement element){
         for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray())
-            if(shapeUIModel instanceof IClassUIModel && (shapeUIModel.getModelElement().getId().compareTo(element.getId()) == 0))
-                return (IClassUIModel)shapeUIModel;
+            if(shapeUIModel.getModelElement().getId().compareTo(element.getId()) == 0)
+                return shapeUIModel;
 
         return null;
     }
@@ -269,12 +266,12 @@ public class Parser {
         IEndRelationship endRelationship = relationship.getEndRelationship();
 
         if(endRelationship instanceof IAssociation){
-            String aggregationKind = relationship.getModelPropertyByName("aggregationKind").getValueAsString();
+            //String aggregationKind = relationship.getModelPropertyByName("aggregationKind").getValueAsString();
             //TODO aggregation switch here
 
             Attribute parsedAssociation = parseAssociation(relationship, direction);
             if(parsedAssociation != null) {
-                IClassUIModel uiModel = getUIModelFromElement(getToModelElement(relationship, direction));
+                IClassUIModel uiModel = (IClassUIModel) getUIModelFromElement(getToModelElement(relationship, direction));
 
                 if (uiModel != null) {
                     Struct parsedClass = parseClassWithoutParent(uiModel);
@@ -514,17 +511,45 @@ public class Parser {
         return aPackage.getFiles().contains(null) ? null : aPackage;
     }
 
+    private Package parseDefaultPackage(IPackage iPackage){
+        Package aPackage = new Package(iPackage.getName(), new ArrayList<>(), codebase.getPathname()+"\\"+iPackage.getName());
+
+        for(IModelElement modelElement: iPackage.toChildArray()){
+            if(modelElement instanceof IClass)
+                aPackage.addFile(parseClassWithParent((IClassUIModel) getUIModelFromElement(modelElement), aPackage.getPathname()));
+            else if (modelElement instanceof IPackage)
+                parsePackageTopDown((IPackageUIModel) getUIModelFromElement(modelElement), aPackage);
+        }
+
+        return aPackage.getFiles().contains(null) ? null : aPackage;
+    }
+
     public void parseDiagram(IDiagramUIModel iDiagramUIModel){
+        int handled = 0;
+
         for(IShapeUIModel shapeUIModel: iDiagramUIModel.toShapeUIModelArray()){
             IModelElement modelElement = shapeUIModel.getModelElement();
+            IModelElement parent = modelElement.getParent();
 
             if(modelElement instanceof IPackage){
-                if(modelElement.getParent() instanceof IModel)
+                if(parent instanceof IModel){
+                    if(handled++ == 1)
+                        GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined.");
+
                     codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel));
+                }
+                else if((parent instanceof IPackage) && (shapeUIModel.getParent() == null)) {
+                    codebase.addPackage(parseDefaultPackage((IPackage) parent));
+                }
             }
             else if(modelElement instanceof IClass){
-                if(modelElement.getParent() instanceof IModel){
+                if(parent instanceof IModel){
+                    if(handled++ == 1)
+                        GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined.");
                     codebase.addFile(parseClassWithParent((IClassUIModel) shapeUIModel, codebase.getPathname()));
+                }
+                else if((parent instanceof IPackage) && (shapeUIModel.getParent() == null)) {
+                    codebase.addPackage(parseDefaultPackage((IPackage) parent));
                 }
             }
         }
