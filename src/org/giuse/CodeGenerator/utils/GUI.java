@@ -173,10 +173,19 @@ public class GUI {
         return createLinkButton(text, uri, null);
     }
 
-    public static JLabel createLabel(String text, Icon icon, int horizontalAlignment) {
-        JLabel label = new JLabel(text + ":", icon, horizontalAlignment);
-        label.setFont(label.getFont().deriveFont(Font.BOLD));
+
+    public static JLabel createLabel(String text, Icon icon, int horizontalAlignment, float size, int style) {
+        JLabel label = new JLabel(text, icon, horizontalAlignment);
+        label.setFont(label.getFont().deriveFont(style,size));
         return label;
+    }
+
+    public static JLabel createLabel(String text, Icon icon, int horizontalAlignment, float size) {
+        return createLabel(text, icon, horizontalAlignment, size, Font.PLAIN);
+    }
+
+    public static JLabel createLabel(String text, Icon icon, int horizontalAlignment) {
+        return createLabel(text, icon, horizontalAlignment, 11);
     }
 
     public static JLabel createLabel(String text, Icon icon) {
@@ -235,7 +244,7 @@ public class GUI {
 
     public static ImageIcon getImageIcon() {
         String discoverImagePath = String.join(File.separator, Config.ICONS_PATH, "CodeGenerator.png");
-        return GUI.loadImage(discoverImagePath, "Process discovery icon", 0.1f);
+        return GUI.loadImage(discoverImagePath, "Code generator icon", 0.1f);
     }
 
     public static void showErrorParsingMessage(IClassUIModel iClassUIModel, String tag, IModelElement modelElement, String message){

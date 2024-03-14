@@ -5,6 +5,7 @@ import org.giuse.CodeGenerator.parser.models.Codebase;
 import org.giuse.CodeGenerator.parser.models.Enum;
 import org.giuse.CodeGenerator.parser.models.Interface;
 import org.giuse.CodeGenerator.parser.models.Package;
+import org.giuse.CodeGenerator.utils.ChooseListDialogHandler;
 import org.giuse.CodeGenerator.utils.GUI;
 
 import java.io.File;
