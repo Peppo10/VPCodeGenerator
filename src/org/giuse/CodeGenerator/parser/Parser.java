@@ -251,8 +251,6 @@ public class Parser {
         IEndRelationship endRelationship = relationship.getEndRelationship();
 
         if(endRelationship instanceof IAssociation){
-            //String aggregationKind = relationship.getModelPropertyByName("aggregationKind").getValueAsString();
-            //TODO aggregation switch here
 
             Attribute parsedAssociation = parseAssociation(relationship, direction, notificationEnabled);
 
@@ -411,6 +409,13 @@ public class Parser {
         IModelElement from, to;
         from = getFromModelElement(association, direction);
         to = getToModelElement(association, direction);
+
+        String aggregationKind = association.getModelPropertyByName("aggregationKind").getValueAsString();
+
+        if(aggregationKind.compareTo("Shared") == 0)
+            viewManager.showMessage("Aggregation relation between " + from.getName() + " and " + to.getName() + " is treated as association", PLUGIN_NAME);
+        else if(aggregationKind.compareTo("Composited") == 0)
+            viewManager.showMessage("Composition relation between " + from.getName() + " and " + to.getName() + " is treated as association", PLUGIN_NAME);
 
         if(toMultiplicity.compareTo("Unspecified") == 0){
             GUI.showErrorMessageDialog(viewManager.getRootFrame(), TAG, from.getName() + " has no multiplicity specified for " + to.getName());
