@@ -1,7 +1,6 @@
 package org.giuse.CodeGenerator;
 
 import com.vp.plugin.action.VPAction;
-import com.vp.plugin.action.VPActionController;
 import com.vp.plugin.action.VPContext;
 import com.vp.plugin.action.VPContextActionController;
 import com.vp.plugin.diagram.IDiagramElement;

@@ -5,6 +5,8 @@ import com.vp.plugin.ViewManager;
 import com.vp.plugin.diagram.shape.IClassUIModel;
 import com.vp.plugin.model.IModelElement;
 import com.vp.plugin.view.IDialog;
+import org.giuse.CodeGenerator.logger.Logger;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
@@ -248,7 +250,7 @@ public class GUI {
     }
 
     public static void showErrorParsingMessage(IClassUIModel iClassUIModel, String tag, IModelElement modelElement, String message){
-        showErrorMessageDialog(viewManager.getRootFrame(), tag, message);
+        Logger.showError(message);
         iClassUIModel.setForeground(defaultError);
         modelElement.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
     }
