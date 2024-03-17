@@ -37,18 +37,17 @@ public class Parser {
         DEFAULT_PATH = choosePath;
 
         if(INSTANCE == null)
-            INSTANCE = new Parser(context, name);
+            INSTANCE = new Parser(context);
 
-        INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
+        INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\" + name);
 
         INSTANCE.errorFlag = false;
 
         return INSTANCE;
     }
 
-    private Parser(VPContext context, String name){
+    private Parser(VPContext context){
         this.context = context;
-        this.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\"+name);
     }
 
     public Codebase getCodebase(){
@@ -185,7 +184,7 @@ public class Parser {
                     ((Enum.Builder) builder).addImplements(to.getName());
 
                 for(IOperation function: ((IClass) to).toOperationArray()){
-                    Function parsedFunction = parseFunction(function, iClass, notificationEnabled);
+                    Function parsedFunction = parseFunction(function, iClass, false);
 
                     if(parsedFunction != null){
                         parsedFunction.setOverride(true);
@@ -214,7 +213,7 @@ public class Parser {
 
                         Class extended = new Class.Builder("",null,classUIModel.getModelElement().getName()).build();
 
-                        extended.setAttributes(parseAttributes((IClass) classUIModel.getModelElement(), notificationEnabled));
+                        extended.setAttributes(parseExtendAttributes((IClass) classUIModel.getModelElement()));
 
                         ((Class.Builder) builder).setExtends(extended);
                         hasExtend.set(true);
@@ -240,7 +239,7 @@ public class Parser {
 
     private IShapeUIModel getUIModelFromElement(IModelElement element){
         for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray())
-            if(shapeUIModel.getModelElement().getId().compareTo(element.getId()) == 0)
+            if (shapeUIModel.getModelElement().getId().compareTo(element.getId()) == 0)
                 return shapeUIModel;
 
         return null;
@@ -340,12 +339,12 @@ public class Parser {
         return builder.build();
     }
 
-    private ArrayList<Attribute> parseAttributes(IClass aClass, Boolean notificationEnabled){
+    private ArrayList<Attribute> parseExtendAttributes(IClass aClass){
         ArrayList<Attribute> attributesList = new ArrayList<>();
         IAttribute[] attributes = aClass.toAttributeArray();
 
         for(IAttribute attribute: attributes)
-            attributesList.add(parseAttribute(attribute, aClass, notificationEnabled));
+            attributesList.add(parseAttribute(attribute, aClass, false));
 
         return attributesList;
     }
@@ -560,6 +559,8 @@ public class Parser {
 
             if((parent instanceof IModel && (shapeUIModel.getParent() == null)) && (handled++ == 1))
                 GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined.");
+
+            Logger.Debug.showMessage(shapeUIModel.getModelElement().getName(), TAG);
 
             if(modelElement instanceof IPackage){
                 if(parent instanceof IModel && (shapeUIModel.getParent() == null))

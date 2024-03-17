@@ -2,7 +2,6 @@ package org.giuse.CodeGenerator.parser.models;
 
 import org.giuse.CodeGenerator.parser.models.statements.Assignment;
 import org.giuse.CodeGenerator.parser.models.statements.Statement;
-
 import java.io.File;
 import java.util.ArrayList;
 

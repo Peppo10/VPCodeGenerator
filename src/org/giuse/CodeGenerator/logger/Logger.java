@@ -14,4 +14,10 @@ public class Logger {
     public static void showError(String message){
         viewManager.showMessage("ERROR: " + message, Config.PLUGIN_NAME);
     }
+
+    public static class Debug{
+        public static void showMessage(String message, String tag){
+            viewManager.showMessage("DEBUG MESSAGE: " + message, tag);
+        }
+    }
 }
