@@ -560,7 +560,7 @@ public class Parser {
             if((parent instanceof IModel && (shapeUIModel.getParent() == null)) && (handled++ == 1))
                 GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined.");
 
-            Logger.Debug.showMessage(shapeUIModel.getModelElement().getName(), TAG);
+            // TODO null pointer when switch between diagrams Logger.Debug.showMessage(shapeUIModel.getModelElement().getName(), TAG);
 
             if(modelElement instanceof IPackage){
                 if(parent instanceof IModel && (shapeUIModel.getParent() == null))
