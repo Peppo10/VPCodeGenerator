@@ -249,8 +249,8 @@ public class GUI {
         return GUI.loadImage(discoverImagePath, "Code generator icon", 0.1f);
     }
 
-    public static void showErrorParsingMessage(IClassUIModel iClassUIModel, String tag, IModelElement modelElement, String message){
-        Logger.showError(message);
+    public static void showErrorParsingMessage(Logger logger ,IClassUIModel iClassUIModel, IModelElement modelElement, String message){
+        logger.queueErrorMessage(message);
         iClassUIModel.setForeground(defaultError);
         modelElement.addPropertyChangeListener(evt -> iClassUIModel.setForeground(new Color(0,0,0)));
     }

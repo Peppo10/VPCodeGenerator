@@ -1,18 +1,15 @@
 package org.giuse.CodeGenerator.generator;
-
+import org.giuse.CodeGenerator.logger.Logger;
+import org.giuse.CodeGenerator.logger.Logger.Message;
 import org.giuse.CodeGenerator.parser.models.Class;
 import org.giuse.CodeGenerator.parser.models.Codebase;
 import org.giuse.CodeGenerator.parser.models.Enum;
 import org.giuse.CodeGenerator.parser.models.Interface;
 import org.giuse.CodeGenerator.parser.models.Package;
-import org.giuse.CodeGenerator.utils.ChooseListDialogHandler;
 import org.giuse.CodeGenerator.utils.GUI;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import static org.giuse.CodeGenerator.utils.Config.PLUGIN_NAME;
 import static org.giuse.CodeGenerator.utils.GUI.viewManager;
 
 public class Generator {
@@ -21,9 +18,8 @@ public class Generator {
         if(codebase.getClasses().contains(null) || codebase.getPackages().contains(null))
             return;
 
-        if(!new File(codebase.getPathname()).mkdirs()){
-            viewManager.showMessage("folder "+codebase.getName()+" was not instanced(maybe already exists)", PLUGIN_NAME);
-        }
+        if(!new File(codebase.getPathname()).mkdirs())
+            Logger.showMessage(new Message(Message.MessageType.WARNING,"folder "+codebase.getName()+" was not instanced(maybe already exists)"));
 
         for(Package aPackage: codebase.getPackages())
             generatePackage(aPackage);
@@ -40,9 +36,8 @@ public class Generator {
     }
 
     private static void generatePackage(Package aPackage){
-        if(!new File(aPackage.getPathname()).mkdirs()){
-            viewManager.showMessage("folder "+aPackage.getName()+" was not instanced(maybe already exists)", PLUGIN_NAME);
-        }
+        if(!new File(aPackage.getPathname()).mkdirs())
+            Logger.showMessage(new Message(Message.MessageType.WARNING,"folder "+aPackage.getName()+" was not instanced(maybe already exists)"));
 
         for(File file: aPackage.getFiles()){
             try {
