@@ -36,8 +36,6 @@ public class Generator {
     }
 
     private static void generatePackage(Package aPackage){
-        Logger.showMessage(new Message(Message.MessageType.DEBUG,aPackage.getPathname()));
-
         if(!new File(aPackage.getPathname()).mkdirs())
             Logger.showMessage(new Message(Message.MessageType.WARNING,"folder "+aPackage.getName()+" was not instanced(maybe already exists)"));
 
@@ -52,8 +50,6 @@ public class Generator {
     }
 
     private static void generateFile(File file) throws IOException {
-        Logger.showMessage(new Message(Message.MessageType.DEBUG,file.getAbsolutePath()));
-
         if(file instanceof Class){
             generateClass((Class)file);
         } else if (file instanceof Interface) {

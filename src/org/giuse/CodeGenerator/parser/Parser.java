@@ -119,13 +119,23 @@ public class Parser {
             for(IClass innerClass: innerClasses){
                 IClassUIModel uiModel = (IClassUIModel) getUIModelFromElement(innerClass);
 
-                if(uiModel != null && (uiModel.getParent().getModelElement().getAddress().startsWith(contextPath))){
-                    Struct parsedInnerClass = parseClass(uiModel, getElementPath(uiModel));
+                if(uiModel != null){
+                    IDiagramElement parent = uiModel.getParent();
 
-                    if(parsedInnerClass == null)
-                        this.errorFlag = true;
-                    else
-                        builder.addInnerClass(parsedInnerClass);
+                    if
+                    (
+                            ((parent != null) && (parent.getModelElement().getAddress().startsWith(contextPath)))
+                            ||
+                            ((parent == null) && (contextPath.isEmpty()))
+                    )
+                    {
+                        Struct parsedInnerClass = parseClass(uiModel, getElementPath(uiModel));
+
+                        if(parsedInnerClass == null)
+                            this.errorFlag = true;
+                        else
+                            builder.addInnerClass(parsedInnerClass);
+                    }
                 }
             }
 
