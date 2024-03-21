@@ -40,7 +40,7 @@ public class Parser {
         if(INSTANCE == null)
             INSTANCE = new Parser(context);
 
-        INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + "\\" + name);
+        INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + File.separator + name);
 
         INSTANCE.logger = new Logger();
 
@@ -72,15 +72,15 @@ public class Parser {
             optionalPackagePath = getElementPath(iClassUIModel);
 
         if(iClass.hasStereotype("Interface")){
-            builder = new Interface.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
+            builder = new Interface.Builder(optionalPackagePath + File.separator + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.INTERFACE;
         }
         else if(iClass.hasStereotype("Enum")){
-            builder = new Enum.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
+            builder = new Enum.Builder(optionalPackagePath + File.separator + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.ENUM;
         }
         else{
-            builder = new Class.Builder(optionalPackagePath + "\\" + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
+            builder = new Class.Builder(optionalPackagePath + File.separator + iClass.getName() + ".java", iClass.getVisibility(), iClass.getName());
             classType = ClassType.CLASS;
         }
 
@@ -487,7 +487,7 @@ public class Parser {
 
         String optionalPackagePath = parentPackage != null ? parentPackage.getPathname() : codebase.getPathname();
 
-        return new Package(iPackage.getModelElement().getName(), new ArrayList<>(), optionalPackagePath+"\\"+iPackage.getModelElement().getName());
+        return new Package(iPackage.getModelElement().getName(), new ArrayList<>(), optionalPackagePath + File.separator + iPackage.getModelElement().getName());
     }
 
     private String getElementPath(IShapeUIModel modelElement){
@@ -502,7 +502,7 @@ public class Parser {
     }
 
     private Package parsePackage(IPackageUIModel iPackage, String parentPath){
-        Package aPackage = new Package(iPackage.getModelElement().getName(), new ArrayList<>(), parentPath + "\\" + iPackage.getModelElement().getName());
+        Package aPackage = new Package(iPackage.getModelElement().getName(), new ArrayList<>(), parentPath + File.separator + iPackage.getModelElement().getName());
 
         for(IShapeUIModel shapeUIModel: iPackage.toChildArray()){
             IModelElement iModelElement = shapeUIModel.getModelElement();
@@ -517,7 +517,7 @@ public class Parser {
     }
 
     private Package parseDefaultPackage(IPackage iPackage){
-        Package aPackage = new Package(iPackage.getName(), new ArrayList<>(), codebase.getPathname()+"\\"+iPackage.getName());
+        Package aPackage = new Package(iPackage.getName(), new ArrayList<>(), codebase.getPathname() + File.separator + iPackage.getName());
 
         for(IModelElement modelElement: iPackage.toChildArray()){
             if(modelElement instanceof IClass)
