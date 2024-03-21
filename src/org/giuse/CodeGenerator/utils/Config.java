@@ -1,7 +1,6 @@
 package org.giuse.CodeGenerator.utils;
 
 import com.vp.plugin.ApplicationManager;
-
 import java.io.*;
 import java.util.Properties;
 

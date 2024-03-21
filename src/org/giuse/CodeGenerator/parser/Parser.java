@@ -38,7 +38,9 @@ public class Parser {
         DEFAULT_PATH = choosePath;
 
         if(INSTANCE == null)
-            INSTANCE = new Parser(context);
+            INSTANCE = new Parser();
+
+        INSTANCE.context = context;
 
         INSTANCE.codebase = new Codebase(name,new ArrayList<>(), new ArrayList<>(), DEFAULT_PATH + File.separator + name);
 
@@ -47,10 +49,6 @@ public class Parser {
         INSTANCE.errorFlag = false;
 
         return INSTANCE;
-    }
-
-    private Parser(VPContext context){
-        this.context = context;
     }
 
     public Codebase getCodebase(){
@@ -208,14 +206,12 @@ public class Parser {
             }
             else{
                 if(classType == ClassType.CLASS){
-                    IClassUIModel classUIModel = (IClassUIModel) getUIModelFromElement(to);
-
-                    if((!hasExtend.get()) && (classUIModel != null)){
+                    if((!hasExtend.get())){
                         logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + " extends " + to.getName());
 
-                        Class extended = new Class.Builder("",null,classUIModel.getModelElement().getName()).build();
+                        Class extended = new Class.Builder("",null, to.getName()).build();
 
-                        extended.setAttributes(parseExtendAttributes((IClass) classUIModel.getModelElement()));
+                        extended.setAttributes(parseExtendAttributes((IClass) to));
 
                         ((Class.Builder) builder).setExtends(extended);
                         hasExtend.set(true);
