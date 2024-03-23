@@ -133,6 +133,8 @@ public class Parser {
                             this.errorFlag = true;
                         else
                             builder.addInnerClass(parsedInnerClass);
+
+                        logger.queueInfoMessage(iClass.getName() + " contains declaration of " + innerClass.getName());
                     }
                 }
             }
@@ -163,7 +165,7 @@ public class Parser {
             }
         }
 
-        return builder.addConstructor().build();
+        return builder.build();
     }
 
     private Integer handleSimpleRelationshipParsing(ISimpleRelationship relationship, IClass iClass, Struct.Builder builder, ClassType classType, IClassUIModel iClassUIModel, Color defaultColor, AtomicBoolean hasExtend){
@@ -512,6 +514,9 @@ public class Parser {
 
         for(IShapeUIModel shapeUIModel: iPackage.toChildArray()){
             IModelElement iModelElement = shapeUIModel.getModelElement();
+
+            if(iModelElement.getParent() instanceof IClass)
+                continue;
 
             if(iModelElement instanceof IClass)
                 aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
