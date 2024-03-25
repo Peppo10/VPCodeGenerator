@@ -3,7 +3,7 @@
     name="%plugin.name"
     description="%plugin.description"
     provider="%plugin.provider"
-    class="org.giuse.CodeGenerator.CodeGenerator" >
+    class="org.giuse.codegenerator.CodeGenerator" >
     <actionSets>
         <contextSensitiveActionSet id="%actions_context.id">
             <contextTypes all="false">
@@ -17,7 +17,7 @@
                     label="Java"
                     style="normal"
                     menuPath="Generate/#">
-                <actionController class="org.giuse.CodeGenerator.GenerateCodeContextActionController"/>
+                <actionController class="org.giuse.codegenerator.GenerateCodeContextActionController"/>
             </action>
         </contextSensitiveActionSet>
         <actionSet id="%actions.id">
@@ -34,7 +34,7 @@
                     icon="assets/icons/CodeGenerator.png"
                     style="normal"
                     ribbonPath="Toolbar/#">
-                <actionController class="org.giuse.CodeGenerator.GenerateCodeActionController" />
+                <actionController class="org.giuse.codegenerator.GenerateCodeActionController" />
             </action>
             <separator
                     id="Separator2"
@@ -47,7 +47,7 @@
                     icon="assets/icons/question.png"
                     style="normal"
                     ribbonPath="Toolbar/Separator2">
-                <actionController class="org.giuse.CodeGenerator.AboutActionController" />
+                <actionController class="org.giuse.codegenerator.AboutActionController" />
             </action>
         </actionSet>
 </actionSets>
