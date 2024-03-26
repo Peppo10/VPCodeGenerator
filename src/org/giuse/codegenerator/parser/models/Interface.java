@@ -26,7 +26,7 @@ public class Interface extends Struct implements Statement{
         StringBuilder interfaceContent = new StringBuilder();
         String formattedIndentation = FormatUtils.getIndentation(indentation);
 
-        if((aPackage != null) && (!aPackage.isEmpty()))
+        if((aPackage != null) && (!aPackage.isEmpty()) && (indentation == 0))
             interfaceContent.append(formattedIndentation).append("package ").append(aPackage).append(";\n\n");
 
         interfaceContent.append(formattedIndentation);

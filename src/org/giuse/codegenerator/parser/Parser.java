@@ -9,6 +9,7 @@ import org.giuse.codegenerator.parser.models.*;
 import org.giuse.codegenerator.parser.models.Class;
 import org.giuse.codegenerator.parser.models.Enum;
 import org.giuse.codegenerator.parser.models.Package;
+import org.giuse.codegenerator.parser.models.statements.Return;
 import org.giuse.codegenerator.utils.ChooseListDialogHandler;
 import org.giuse.codegenerator.utils.FormatUtils;
 import org.giuse.codegenerator.utils.GUI;
@@ -58,7 +59,7 @@ public class Parser {
         return this.codebase;
     }
 
-    private Struct parseClass(IClassUIModel iClassUIModel, String parentPath, Boolean isNested){
+    private Struct parseClass(IClassUIModel iClassUIModel, String parentPath){
         IClass iClass = (IClass) iClassUIModel.getModelElement();
 
         //endRelationship.getMasterView().getDiagramUIModel().getName()
@@ -85,25 +86,8 @@ public class Parser {
             classType = ClassType.CLASS;
         }
 
-        if(!isNested){
-            StringBuilder stringBuilder = new StringBuilder();
 
-            String[] addressParts = iClass.getAddress().split(":");
-
-            int start = this.defaultPackage != null ? 2 : 1;
-
-            for(int i=1; i < addressParts.length -1 ; i++){
-                if(start==2 && i==1)
-                    stringBuilder.append(this.defaultPackage);
-                else
-                    stringBuilder.append(getNameFromAddress(addressParts[i]));
-
-                if(i < (addressParts.length - 2))
-                    stringBuilder.append(".");
-            }
-
-            builder.setPackage(stringBuilder.toString());
-        }
+        builder.setPackage(getClassPackage(iClass));
 
         if((classType == ClassType.CLASS) && iClass.isAbstract())
             ((Class.Builder)builder).isAbstract();
@@ -150,7 +134,7 @@ public class Parser {
                             ((parent == null) && (contextPath.isEmpty()))
                     )
                     {
-                        Struct parsedInnerClass = parseClass(uiModel, getElementPath(uiModel), true);
+                        Struct parsedInnerClass = parseClass(uiModel, getElementPath(uiModel));
 
                         if(parsedInnerClass == null)
                             this.errorFlag = true;
@@ -270,15 +254,54 @@ public class Parser {
         for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray()) {
             IModelElement modelElement = shapeUIModel.getModelElement();
 
-            String[] parts = modelElement.getAddress().split(":");
-
-            String modelAddress = parts[parts.length - 1];
-
-            if (modelAddress.compareTo(address) == 0)
+            if (modelElement.getId().compareTo(address) == 0)
                 return modelElement.getName();
         }
 
         return null;
+    }
+
+    private String getClassPackage(IClass iClass){
+        StringBuilder stringBuilder = new StringBuilder();
+        int begin, start;
+        String contextAddress;
+
+        if(iClass.getAddress().compareTo(this.contextPath) == 0)
+            return null;
+
+        if(this.contextPath.isEmpty()){
+           contextAddress = iClass.getAddress();
+
+            if(this.defaultPackage != null) {
+                stringBuilder.append(this.defaultPackage);
+
+                if(iClass.getParent().getName().compareTo(defaultPackage) != 0)
+                    stringBuilder.append(".");
+
+                start = 2;
+            }
+            else
+                start = 1;
+
+            viewManager.showMessage(iClass.getName() +": "+ contextAddress, TAG);
+        }
+        else {
+            start = 0;
+            begin = this.contextPath.length() + 1;
+            String[] contextPathParts = this.contextPath.split(":");
+            contextAddress = contextPathParts[contextPathParts.length-1] + ":" + iClass.getAddress().substring(begin);
+        }
+
+        String[] addressParts = contextAddress.split(":");
+
+        for(int i=start; i < addressParts.length -1 ; i++) {
+            stringBuilder.append(getNameFromAddress(addressParts[i]));
+
+            if (i < (addressParts.length - 2))
+                stringBuilder.append(".");
+        }
+
+        return stringBuilder.toString();
     }
 
     private Boolean handleFunctionParsing(IOperation operation, IClassUIModel iClassUIModel, Struct.Builder builder, ClassType classType, Color defaultColor){
@@ -417,7 +440,7 @@ public class Parser {
 
             String returnType = function.getReturnTypeAsString();
 
-            String formattedReturnType = returnType.compareTo("void") == 0 ? returnType : FormatUtils.toJavaType(returnType);
+            String formattedType = FormatUtils.toJavaType(returnType);
 
             String visibility = function.getVisibility();
 
@@ -426,12 +449,15 @@ public class Parser {
 
             String formattedVisibility = iClass.hasStereotype("Interface") ? null : visibility;
 
-            Function.Builder builderFunction = new Function.Builder(function.getName(), formattedVisibility, formattedReturnType);
+            Function.Builder builderFunction = new Function.Builder(function.getName(), formattedVisibility, formattedType);
+
+            if(formattedType.compareTo("void") != 0)
+                builderFunction.addStatement(new Return("null"));
 
             for(IParameter parameter :function.toParameterArray()){
                 if(parameter.getTypeAsText() !=null){
-                    String formattedType = FormatUtils.toJavaType(parameter.getTypeAsString());
-                    builderFunction.addParameter(new Attribute("", formattedType,parameter.getName(), ""));
+                    String paramFormattedType = FormatUtils.toJavaType(parameter.getTypeAsString());
+                    builderFunction.addParameter(new Attribute("", paramFormattedType,parameter.getName(), null));
                 }
                 else{
                     if(notify)
@@ -538,7 +564,19 @@ public class Parser {
 
         String relationVisibility = ((IAssociation) association.getEndRelationship()).getVisibility();
 
-        String scope = relationVisibility.compareTo("Unspecified") == 0 ? "private" : relationVisibility;
+        String scope;
+
+        if(from.hasStereotype("Interface")){
+            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + to.getName() + " visibility is ignored");
+            scope = null;
+
+            if(initializer == null)
+                initializer = "null";
+
+        }
+        else{
+            scope = (relationVisibility.compareTo("Unspecified") == 0) ? "private" : relationVisibility;
+        }
 
         return new Attribute(scope, attributeType, attributeName.toLowerCase(), initializer);
     }
@@ -577,7 +615,7 @@ public class Parser {
                 continue;
 
             if(iModelElement instanceof IClass)
-                aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname(), false));
+                aPackage.addFile(parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
             else if (iModelElement instanceof IPackage)
                 codebase.addPackage(parsePackage((IPackageUIModel) shapeUIModel, aPackage.getPathname()));
         }
@@ -592,7 +630,7 @@ public class Parser {
 
         for(IModelElement modelElement: iPackage.toChildArray()){
             if(modelElement instanceof IClass)
-                aPackage.addFile(parseClass((IClassUIModel) getUIModelFromElement(modelElement), aPackage.getPathname(), false));
+                aPackage.addFile(parseClass((IClassUIModel) getUIModelFromElement(modelElement), aPackage.getPathname()));
             else if (modelElement instanceof IPackage)
                 codebase.addPackage(parsePackage((IPackageUIModel) getUIModelFromElement(modelElement), aPackage.getPathname()));
         }
@@ -622,7 +660,7 @@ public class Parser {
             }
             else if(modelElement instanceof IClass){
                 if(parent instanceof IModel && (shapeUIModel.getParent() == null))
-                    codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname(), false));
+                    codebase.addFile(parseClass((IClassUIModel) shapeUIModel, codebase.getPathname()));
                 else if((parent instanceof IPackage) && (shapeUIModel.getParent() == null)) {
                     codebase.addPackage(parseDefaultPackage((IPackage) parent));
                     break;
@@ -635,7 +673,7 @@ public class Parser {
 
     public void parseSingleClass(IClassUIModel iClass){
         contextPath = iClass.getModelElement().getAddress();
-        File aClass = parseClass(iClass, codebase.getPathname(), false);
+        File aClass = parseClass(iClass, codebase.getPathname());
 
         codebase.addFile(aClass);
 

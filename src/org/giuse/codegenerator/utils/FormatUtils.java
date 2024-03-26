@@ -9,6 +9,8 @@ public class FormatUtils {
     private static final String NOT_ARRAY_REGEX = "1|(([0|1])\\.+1)";
     private static final String FIXED_ARRAY_REGEX = "([2-9])+|(([0|1])(\\.+)([2-9]+))";
     private static final String CAPS_LOCK_REGEX = "[A-Z]+";
+    private static final String STRING_REGEX = "^\".*\"";
+    ;
 
     public static boolean isCapsLock(String string){
         return string.matches(CAPS_LOCK_REGEX);
@@ -16,6 +18,10 @@ public class FormatUtils {
 
     public static String getIndentation(int indentation){
         return "\t".repeat(indentation);
+    }
+
+    public static boolean isString(String string){
+        return string.matches(STRING_REGEX);
     }
 
     public static String getFixedArrayLength(String array){
@@ -52,6 +58,7 @@ public class FormatUtils {
         String firstFormat = firstUpperFormat(vpType);
 
         switch (firstFormat){
+            case "Null":
             case "Void":
                 return firstFormat.toLowerCase();
             case "Int":

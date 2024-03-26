@@ -48,7 +48,7 @@ public class Class extends Struct implements Statement {
         StringBuilder classContent = new StringBuilder();
         String formattedIndentation = FormatUtils.getIndentation(indentation);
 
-        if((aPackage != null) && (!aPackage.isEmpty()))
+        if((aPackage != null) && (!aPackage.isEmpty()) && (indentation == 0))
             classContent.append(formattedIndentation).append("package ").append(aPackage).append(";\n\n");
 
         classContent.append(formattedIndentation);

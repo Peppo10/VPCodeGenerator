@@ -13,9 +13,16 @@ public class Attribute implements Statement {
         this.scope = scope;
         this.type = type;
         this.name = name;
+        this.initializer = initializer;
 
-        if(type.compareTo("Float") == 0)
-            this.initializer = initializer + "F";
+        if (initializer == null)
+            return;
+
+        if((type.compareTo("Float") == 0) && (initializer.compareTo("null") != 0))
+            this.initializer += "F";
+        else if ((type.compareTo("String") == 0) && (initializer.compareTo("null") != 0) && (!FormatUtils.isString(initializer))) {
+            this.initializer = "\"" + initializer + "\"";
+        }
     }
 
     public String getType() {

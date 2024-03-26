@@ -30,7 +30,7 @@ public class Enum extends Struct implements Statement {
         StringBuilder enumContent = new StringBuilder();
         String formattedIndentation = FormatUtils.getIndentation(indentation);
 
-        if((aPackage != null) && (!aPackage.isEmpty()))
+        if((aPackage != null) && (!aPackage.isEmpty()) && (indentation == 0))
             enumContent.append(formattedIndentation).append("package ").append(aPackage).append(";\n\n");
 
         enumContent.append(formattedIndentation);
