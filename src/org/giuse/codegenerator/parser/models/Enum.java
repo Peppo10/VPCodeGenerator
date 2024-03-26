@@ -12,8 +12,18 @@ public class Enum extends Struct implements Statement {
     Map<String, String> pairs;
     private final ArrayList<String> Implements;
 
-    private Enum(Map<String, String> pairs, String pathname ,String scope, String name, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, String aPackage) {
-        super(pathname, scope, name, attributes, functions, innerClasses, null, aPackage);
+    private Enum(Map<String,
+                 String> pairs,
+                 String pathname,
+                 String scope,
+                 String name,
+                 ArrayList<String> anImplements,
+                 ArrayList<Attribute> attributes,
+                 ArrayList<Function> functions,
+                 ArrayList<Struct> innerClasses,
+                 String aPackage,
+                 ArrayList<String> imports) {
+        super(pathname, scope, name, attributes, functions, innerClasses, null, aPackage, imports);
         this.pairs = pairs;
         Implements = anImplements;
     }
@@ -107,7 +117,7 @@ public class Enum extends Struct implements Statement {
         }
 
         public Enum build(){
-            return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions, bInnerClasses, bPackage);
+            return new Enum(bPairs,bPathname, bScope, bName, bImplements, bAttributes, bFunctions, bInnerClasses, bPackage, bImports);
         }
     }
 }

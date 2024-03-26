@@ -12,8 +12,19 @@ public class Class extends Struct implements Statement {
     private ArrayList<String> Implements;
     private Boolean isAbstract;
 
-    private Class(String pathname, Boolean isAbstract ,String scope, String name, Struct anExtends, ArrayList<String> anImplements, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, Template template, String aPackage) {
-        super(pathname, scope, name, attributes, functions, innerClasses, template, aPackage);
+    private Class(String pathname,
+                  Boolean isAbstract,
+                  String scope,
+                  String name,
+                  Struct anExtends,
+                  ArrayList<String> anImplements,
+                  ArrayList<Attribute> attributes,
+                  ArrayList<Function> functions,
+                  ArrayList<Struct> innerClasses,
+                  Template template,
+                  String aPackage,
+                  ArrayList<String> imports) {
+        super(pathname, scope, name, attributes, functions, innerClasses, template, aPackage, imports);
         Extends = anExtends;
         Implements = anImplements;
         this.isAbstract = isAbstract;
@@ -48,8 +59,12 @@ public class Class extends Struct implements Statement {
         StringBuilder classContent = new StringBuilder();
         String formattedIndentation = FormatUtils.getIndentation(indentation);
 
-        if((aPackage != null) && (!aPackage.isEmpty()) && (indentation == 0))
-            classContent.append(formattedIndentation).append("package ").append(aPackage).append(";\n\n");
+        if((aPackage != null) && (!aPackage.isEmpty()) && (indentation == 0)){
+            classContent.append("package ").append(aPackage).append(";\n\n");
+
+            for(String aImport: this.imports)
+                classContent.append("import ").append(aImport).append(";\n");
+        }
 
         classContent.append(formattedIndentation);
 
@@ -146,7 +161,7 @@ public class Class extends Struct implements Statement {
         }
 
         public Class build(){
-            return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bInnerClasses, bTemplate, bPackage);
+            return new Class(bPathname, bIsAbstract, bScope, bName, bExtends, bImplements, bAttributes, bFunctions, bInnerClasses, bTemplate, bPackage, bImports);
         }
     }
 }

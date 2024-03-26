@@ -8,8 +8,17 @@ import java.util.ArrayList;
 public class Interface extends Struct implements Statement{
     private ArrayList<String> Extends;
 
-    private Interface(String pathname, String scope, String name, ArrayList<String> anExtends, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, Template template, String aPackage) {
-        super(pathname, scope, name, attributes, functions, innerClasses, template ,aPackage);
+    private Interface(String pathname,
+                      String scope,
+                      String name,
+                      ArrayList<String> anExtends,
+                      ArrayList<Attribute> attributes,
+                      ArrayList<Function> functions,
+                      ArrayList<Struct> innerClasses,
+                      Template template,
+                      String aPackage,
+                      ArrayList<String> imports) {
+        super(pathname, scope, name, attributes, functions, innerClasses, template ,aPackage, imports);
         Extends = anExtends;
     }
 
@@ -83,7 +92,7 @@ public class Interface extends Struct implements Statement{
         }
 
         public Interface build(){
-            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bInnerClasses, bTemplate, bPackage);
+            return new Interface(bPathname, bScope, bName, bExtends, bAttributes, bFunctions, bInnerClasses, bTemplate, bPackage, bImports);
         }
     }
 }

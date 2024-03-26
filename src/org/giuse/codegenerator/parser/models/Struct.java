@@ -14,8 +14,17 @@ public class Struct extends File implements Statement {
     protected Template template;
     protected ArrayList<Struct> innerClasses;
     protected String aPackage;
+    protected ArrayList<String> imports;
 
-    protected Struct(String pathname, String scope, String name, ArrayList<Attribute> attributes, ArrayList<Function> functions,ArrayList<Struct> innerClasses, Template template, String aPackage) {
+    protected Struct(String pathname,
+                     String scope,
+                     String name,
+                     ArrayList<Attribute> attributes,
+                     ArrayList<Function> functions,
+                     ArrayList<Struct> innerClasses,
+                     Template template,
+                     String aPackage,
+                     ArrayList<String> imports) {
         super(pathname);
         this.scope = scope;
         this.name = name;
@@ -24,6 +33,20 @@ public class Struct extends File implements Statement {
         this.template = template;
         this.innerClasses = innerClasses;
         this.aPackage = aPackage;
+        this.imports = imports;
+
+        for(Attribute attribute: attributes){
+            for(String aImport: attribute.getImports())
+                if((aImport != null) && (!imports.contains(aImport)))
+                    imports.add(aImport);
+        }
+
+        for(Function function: functions){
+            for(String aImport: function.getImports())
+                if((aImport != null) && (!imports.contains(aImport)))
+                    imports.add(aImport);
+        }
+
     }
 
     public String getName() {
@@ -53,6 +76,8 @@ public class Struct extends File implements Statement {
         protected ArrayList<Struct> bInnerClasses;
         protected String bPackage;
 
+        protected ArrayList<String> bImports;
+
         public Builder(String pathname, String scope, String name){
             this.bPathname = pathname;
             this.bScope = scope;
@@ -60,6 +85,7 @@ public class Struct extends File implements Statement {
             this.bAttributes = new ArrayList<>();
             this.bFunctions = new ArrayList<>();
             this.bInnerClasses = new ArrayList<>();
+            this.bImports = new ArrayList<>();
         }
 
         public Builder addAttribute(Attribute attribute){
@@ -87,6 +113,13 @@ public class Struct extends File implements Statement {
             return this;
         }
 
+        public Builder addImport(String aImport){
+            if((aImport != null) && (!this.bImports.contains(aImport)))
+                this.bImports.add(aImport);
+
+            return this;
+        }
+
         public Builder addConstructor(){
             Function.Builder builder = new Function.Builder(this.bName,"public","");
 
@@ -101,7 +134,7 @@ public class Struct extends File implements Statement {
         }
 
         public Struct build(){
-            return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bInnerClasses, bTemplate, bPackage);
+            return new Struct(bPathname, bScope, bName, bAttributes, bFunctions, bInnerClasses, bTemplate, bPackage, bImports);
         }
     }
 }

@@ -1,5 +1,7 @@
 package org.giuse.codegenerator.utils;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,7 +12,22 @@ public class FormatUtils {
     private static final String FIXED_ARRAY_REGEX = "([2-9])+|(([0|1])(\\.+)([2-9]+))";
     private static final String CAPS_LOCK_REGEX = "[A-Z]+";
     private static final String STRING_REGEX = "^\".*\"";
-    ;
+
+    public static final Map<String, String> listTypeJava = new HashMap<>();
+
+    static {
+        listTypeJava.put("AbstractList","java.util");
+        listTypeJava.put("AbstractSequentialList","java.util");
+        listTypeJava.put("ArrayList","java.util");
+        listTypeJava.put("AttributeList","javax.management");
+        listTypeJava.put("CopyOnWriteArrayList","java.util.concurrent");
+        listTypeJava.put("LinkedList","java.util");
+        listTypeJava.put("RoleList","javax.management.relation");
+        listTypeJava.put("RoleUnresolvedList","javax.management.relation");
+        listTypeJava.put("Stack","java.util");
+        listTypeJava.put("Vector","java.util");
+    }
+
 
     public static boolean isCapsLock(String string){
         return string.matches(CAPS_LOCK_REGEX);

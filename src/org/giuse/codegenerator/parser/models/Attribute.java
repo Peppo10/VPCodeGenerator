@@ -3,17 +3,21 @@ package org.giuse.codegenerator.parser.models;
 import org.giuse.codegenerator.parser.models.statements.Statement;
 import org.giuse.codegenerator.utils.FormatUtils;
 
+import java.util.ArrayList;
+
 public class Attribute implements Statement {
     private String scope;
     private String type;
     private String name;
     private String initializer;
+    private final ArrayList<String> imports;
 
-    public Attribute(String scope, String type, String name, String initializer) {
+    public Attribute(String scope, String type, String name, String initializer, ArrayList<String> imports) {
         this.scope = scope;
         this.type = type;
         this.name = name;
         this.initializer = initializer;
+        this.imports = imports;
 
         if (initializer == null)
             return;
@@ -23,6 +27,18 @@ public class Attribute implements Statement {
         else if ((type.compareTo("String") == 0) && (initializer.compareTo("null") != 0) && (!FormatUtils.isString(initializer))) {
             this.initializer = "\"" + initializer + "\"";
         }
+    }
+
+    public Attribute(String scope, String type, String name, String initializer) {
+        this(scope, type, name, initializer, new ArrayList<>());
+    }
+
+    public void addImport(String aImport){
+        this.imports.add(aImport);
+    }
+
+    public ArrayList<String> getImports() {
+        return imports;
     }
 
     public String getType() {

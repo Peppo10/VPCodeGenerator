@@ -2,7 +2,6 @@ package org.giuse.codegenerator.parser.models;
 
 import org.giuse.codegenerator.parser.models.statements.Statement;
 import org.giuse.codegenerator.utils.FormatUtils;
-
 import java.util.ArrayList;
 
 public class Function implements Statement{
@@ -12,10 +11,10 @@ public class Function implements Statement{
     private ArrayList<Attribute> parameters;
     private Boolean isOverride;
     private Boolean isVirtual;
+    private final ArrayList<Statement> body;
+    private ArrayList<String> imports;
 
-    private ArrayList<Statement> body;
-
-    private Function(String scope, String returnType, String name, ArrayList<Attribute> parameters, Boolean isVirtual, Boolean isOverride, ArrayList<Statement> body) {
+    private Function(String scope, String returnType, String name, ArrayList<Attribute> parameters, Boolean isVirtual, Boolean isOverride, ArrayList<Statement> body, ArrayList<String> imports) {
         this.scope = scope;
         this.returnType = returnType;
         this.name = name;
@@ -23,6 +22,23 @@ public class Function implements Statement{
         this.isVirtual = isVirtual;
         this.isOverride = isOverride;
         this.body = body;
+        this.imports = imports;
+    }
+
+    public Boolean getOverride() {
+        return isOverride;
+    }
+
+    public Boolean getVirtual() {
+        return isVirtual;
+    }
+
+    public ArrayList<Statement> getBody() {
+        return body;
+    }
+
+    public ArrayList<String> getImports() {
+        return imports;
     }
 
     public void setOverride(Boolean override) {
@@ -117,7 +133,7 @@ public class Function implements Statement{
         private Boolean bIsOverride;
         private Boolean bIsVirtual;
         private final ArrayList<Attribute> bParameters;
-
+        private final ArrayList<String> bImports;
         private ArrayList<Statement> bBody;
 
         public Builder(String name, String scope, String returnType){
@@ -128,6 +144,14 @@ public class Function implements Statement{
             this.bIsVirtual = false;
             this.bIsOverride = false;
             this.bBody = new ArrayList<>();
+            this.bImports = new ArrayList<>();
+        }
+
+        public Builder addImport(String aImport){
+            if((aImport != null) && (!this.bImports.contains(aImport)))
+                this.bImports.add(aImport);
+
+            return this;
         }
 
         public Builder isVirtual(){
@@ -151,7 +175,7 @@ public class Function implements Statement{
         }
 
         public Function build(){
-            return new Function(bScope, bReturnType, bName, bParameters, bIsVirtual, bIsOverride, bBody);
+            return new Function(bScope, bReturnType, bName, bParameters, bIsVirtual, bIsOverride, bBody, bImports);
         }
     }
 }

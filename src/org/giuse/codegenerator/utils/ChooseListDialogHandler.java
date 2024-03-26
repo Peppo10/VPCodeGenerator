@@ -2,28 +2,20 @@ package org.giuse.codegenerator.utils;
 
 import com.vp.plugin.view.IDialog;
 import com.vp.plugin.view.IDialogHandler;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import static org.giuse.codegenerator.utils.FormatUtils.listTypeJava;
+
 public class ChooseListDialogHandler implements IDialogHandler {
     public static final String TAG = "ChooseList";
-    private static final String[] listTypeJava = new String[]{
-              "AbstractList"
-            , "AbstractSequentialList"
-            , "ArrayList"
-            , "AttributeList"
-            , "CopyOnWriteArrayList"
-            , "LinkedList"
-            , "RoleList"
-            , "RoleUnresolvedList"
-            , "Stack"
-            , "Vector"};
 
     final private String from, to;
 
-    private static String choose = listTypeJava[0];
+    private static String choose = (String) listTypeJava.keySet().toArray()[0];
 
     public static Boolean applyAlways = false;
 
@@ -50,7 +42,7 @@ public class ChooseListDialogHandler implements IDialogHandler {
 
         JPanel choosePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JLabel chooseLabel = GUI.createLabel("Which type of list do you want to use? ");
-        JComboBox<String> chooseListComboBox = new JComboBox<>(listTypeJava);
+        JComboBox<String> chooseListComboBox = new JComboBox<>(listTypeJava.keySet().toArray(new String[0]));
         chooseListComboBox.setSelectedItem(containsListLabel);
         choosePanel.add(chooseLabel);
         choosePanel.add(chooseListComboBox);

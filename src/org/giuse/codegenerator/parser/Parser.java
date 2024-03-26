@@ -116,8 +116,12 @@ public class Parser {
             }
 
         //template
-        if((templateParameters != null) && (classType != ClassType.ENUM))
-            builder.setTemplate(parseTemplate(templateParameters, iClass));
+        if((templateParameters != null) && (classType != ClassType.ENUM)) {
+            Template template = parseTemplate(templateParameters, iClass);
+            builder.setTemplate(template);
+
+            //TODO builder.addImport(getClassImport(iClass, template.getTypeName()));
+        }
 
         if(parentPath != null){
             //inner classes
@@ -182,8 +186,9 @@ public class Parser {
             if (!(to instanceof IClass) || !(to.getAddress().startsWith(contextPath)))
                 return 2; //should step on next iteration
 
-            if(to.hasStereotype("Interface")){
+            builder.addImport(getClassImport(iClass, to.getName()));
 
+            if(to.hasStereotype("Interface")){
                 logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + " implements " + to.getName());
 
                 if(classType == ClassType.INTERFACE)
@@ -250,6 +255,17 @@ public class Parser {
         return null;
     }
 
+    private IModelElement getModelFromName(String name){
+        for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray()) {
+            IModelElement modelElement = shapeUIModel.getModelElement();
+
+            if (modelElement.getName().compareTo(name) == 0)
+                return modelElement;
+        }
+
+        return null;
+    }
+
     private String getNameFromAddress(String address){
         for(IShapeUIModel shapeUIModel: context.getDiagram().toShapeUIModelArray()) {
             IModelElement modelElement = shapeUIModel.getModelElement();
@@ -265,6 +281,9 @@ public class Parser {
         StringBuilder stringBuilder = new StringBuilder();
         int begin, start;
         String contextAddress;
+
+        if(iClass == null)
+            return null;
 
         if(iClass.getAddress().compareTo(this.contextPath) == 0)
             return null;
@@ -409,21 +428,50 @@ public class Parser {
             return null;
         }
 
-
         if(attribute.getTypeAsString() != null) {
             if(notify)
                 logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + attribute.getVisibility()+" "+attribute.getTypeAsString() +" "+ attribute.getName() + ";");
 
             String formattedType = FormatUtils.toJavaType(attribute.getTypeAsString());
 
+            String multiplicity = attribute.getMultiplicity();
+
             String visibility = attribute.getVisibility();
+
+            String initializer = attribute.getInitialValue();
+
+            String attributeType;
 
             if((attribute.getVisibility() != null) && notify)
                 logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + attribute.getName() +" visibility is ignored");
 
             String formattedVisibility = iClass.hasStereotype("Interface") ? null : visibility;
 
-            return new Attribute(formattedVisibility, formattedType, attribute.getName(), attribute.getInitialValue());
+            ArrayList<String> imports = new ArrayList<>();
+
+            if(FormatUtils.isArrayList(multiplicity)){
+                String typeList = "ArrayList";
+
+                if((!ChooseListDialogHandler.applyAlways) && (!this.errorFlag)){
+                    ChooseListDialogHandler chooseListDialogHandler = new ChooseListDialogHandler(iClass.getName(), formattedType);
+                    viewManager.showDialog(chooseListDialogHandler);
+                    typeList = chooseListDialogHandler.getChoose();
+                }
+
+                imports.add(getClassImport(iClass, typeList));
+
+                attributeType = typeList + "<" + formattedType + ">";
+            }
+            else if(FormatUtils.isFixedArray(multiplicity)){
+                initializer = "new " + formattedType + "[" + FormatUtils.getFixedArrayLength(multiplicity) + "]";
+                attributeType = formattedType+"[]";
+            }
+            else
+                attributeType = formattedType;
+
+            imports.add(getClassImport(iClass, formattedType));
+
+            return new Attribute(formattedVisibility, attributeType, attribute.getName(), initializer, imports);
         }
         else{
             if(notify)
@@ -451,13 +499,39 @@ public class Parser {
 
             Function.Builder builderFunction = new Function.Builder(function.getName(), formattedVisibility, formattedType);
 
+            builderFunction.addImport(getClassImport(iClass, returnType));
+
             if(formattedType.compareTo("void") != 0)
                 builderFunction.addStatement(new Return("null"));
 
             for(IParameter parameter :function.toParameterArray()){
                 if(parameter.getTypeAsText() !=null){
                     String paramFormattedType = FormatUtils.toJavaType(parameter.getTypeAsString());
-                    builderFunction.addParameter(new Attribute("", paramFormattedType,parameter.getName(), null));
+                    String multiplicity = parameter.getMultiplicity();
+                    String attributeType;
+
+                    if(FormatUtils.isArrayList(multiplicity)){
+                        String typeList = "ArrayList";
+
+                        if((!ChooseListDialogHandler.applyAlways) && (!this.errorFlag)){
+                            ChooseListDialogHandler chooseListDialogHandler = new ChooseListDialogHandler(function.getName(), paramFormattedType);
+                            viewManager.showDialog(chooseListDialogHandler);
+                            typeList = chooseListDialogHandler.getChoose();
+                        }
+
+                        builderFunction.addImport(getClassImport(iClass, typeList));
+
+                        attributeType = typeList + "<" + paramFormattedType + ">";
+                    }
+                    else if(FormatUtils.isFixedArray(multiplicity)){
+                        attributeType = paramFormattedType +"[]";
+                    }
+                    else
+                        attributeType = paramFormattedType;
+
+                    builderFunction.addImport(getClassImport(iClass, paramFormattedType));
+
+                    builderFunction.addParameter(new Attribute("", attributeType,parameter.getName(), null));
                 }
                 else{
                     if(notify)
@@ -535,6 +609,8 @@ public class Parser {
         String formattedType = needsAssociationClass ? FormatUtils.toJavaType(associationName) : FormatUtils.toJavaType(to.getName());
         String attributeName = to.getName();
 
+        ArrayList<String> imports = new ArrayList<>();
+
         if(toMultiplicity.compareTo("0") == 0)
             return null;
 
@@ -546,6 +622,8 @@ public class Parser {
                 viewManager.showDialog(chooseListDialogHandler);
                 typeList = chooseListDialogHandler.getChoose();
             }
+
+            imports.add(getClassImport(iClass, typeList));
 
             attributeType = typeList + "<" + formattedType + ">";
             attributeName+="s";
@@ -561,6 +639,8 @@ public class Parser {
 
             return null;
         }
+
+        imports.add(getClassImport(iClass, formattedType));
 
         String relationVisibility = ((IAssociation) association.getEndRelationship()).getVisibility();
 
@@ -578,7 +658,23 @@ public class Parser {
             scope = (relationVisibility.compareTo("Unspecified") == 0) ? "private" : relationVisibility;
         }
 
-        return new Attribute(scope, attributeType, attributeName.toLowerCase(), initializer);
+        return new Attribute(scope, attributeType, attributeName.toLowerCase(), initializer, imports);
+    }
+
+    private String getClassImport(IClass importingClass, String classNameToImport){
+        String javaLibraryImport = FormatUtils.listTypeJava.get(classNameToImport);
+
+        if(javaLibraryImport != null)
+            return javaLibraryImport + "." + classNameToImport;
+
+        IClass formattedClass = (IClass) getModelFromName(classNameToImport);
+        String importingClassPackage = getClassPackage(importingClass);
+        String classToImportPackage = getClassPackage(formattedClass);
+
+        if((classToImportPackage != null) && (importingClassPackage != null) && (classToImportPackage.compareTo(importingClassPackage) != 0))
+            return classToImportPackage + "." + classNameToImport;
+
+        return null;
     }
 
     private Package parsePackageBottomUp(IPackageUIModel iPackage){
