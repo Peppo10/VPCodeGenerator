@@ -302,7 +302,6 @@ public class Parser {
             else
                 start = 1;
 
-            viewManager.showMessage(iClass.getName() +": "+ contextAddress, TAG);
         }
         else {
             start = 0;
@@ -593,12 +592,12 @@ public class Parser {
         String aggregationKind = association.getModelPropertyByName("aggregationKind").getValueAsString();
 
         if(aggregationKind.compareTo("Shared") == 0)
-            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + "Aggregation relation between " + from.getName() + " and " + to.getName() + " is treated as association");
+            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> Aggregation relation between " + from.getName() + " and " + to.getName() + " is treated as association");
         else if(aggregationKind.compareTo("Composited") == 0)
-            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + "Composition relation between " + from.getName() + " and " + to.getName() + " is treated as association");
+            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> Composition relation between " + from.getName() + " and " + to.getName() + " is treated as association");
 
         if(toMultiplicity.compareTo("Unspecified") == 0){
-            logger.queueErrorMessage("Parsing " + iClass.getName() + "-> " + "has no multiplicity specified for " + to.getName());
+            logger.queueErrorMessage("Parsing " + iClass.getName() + "-> has no multiplicity specified for " + to.getName());
             return null;
         }
 
@@ -610,9 +609,6 @@ public class Parser {
         String attributeName = to.getName();
 
         ArrayList<String> imports = new ArrayList<>();
-
-        if(toMultiplicity.compareTo("0") == 0)
-            return null;
 
         if(FormatUtils.isArrayList(toMultiplicity)){
             String typeList = "ArrayList";
