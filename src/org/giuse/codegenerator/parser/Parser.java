@@ -610,6 +610,9 @@ public class Parser {
 
         ArrayList<String> imports = new ArrayList<>();
 
+        if(toMultiplicity.compareTo("0") == 0)
+            return  new Attribute(null, null, null, null, new ArrayList<>());
+
         if(FormatUtils.isArrayList(toMultiplicity)){
             String typeList = "ArrayList";
 

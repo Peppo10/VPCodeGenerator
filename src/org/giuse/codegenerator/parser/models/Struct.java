@@ -35,9 +35,12 @@ public class Struct extends File implements Statement {
         this.aPackage = aPackage;
         this.imports = imports;
 
-        for(Attribute attribute: attributes){
-            for(String aImport: attribute.getImports())
-                if((aImport != null) && (!imports.contains(aImport)))
+        for(Attribute attribute: attributes) {
+            if (attribute == null)
+                continue;
+
+            for (String aImport : attribute.getImports())
+                if ((aImport != null) && (!imports.contains(aImport)))
                     imports.add(aImport);
         }
 

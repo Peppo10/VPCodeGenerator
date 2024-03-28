@@ -83,7 +83,8 @@ public class Attribute implements Statement {
         if((this.scope!= null) && (!this.scope.isEmpty()))
             attributeContent.append(this.scope).append(" ");
 
-        attributeContent.append(this.type).append(" ").append(this.name);
+        if((this.type!= null) && (this.name != null))
+            attributeContent.append(this.type).append(" ").append(this.name);
 
         if((this.initializer!= null) && (!this.initializer.isEmpty()))
             attributeContent.append("= ").append(this.initializer);
