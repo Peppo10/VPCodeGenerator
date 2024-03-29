@@ -742,7 +742,7 @@ public class Parser {
             IModelElement parent = modelElement.getParent();
 
             if((parent instanceof IModel && (shapeUIModel.getParent() == null)) && (handled++ == 1))
-                GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined.");
+                GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined. Can cause errors with import");
 
 
             if(modelElement instanceof IPackage){
