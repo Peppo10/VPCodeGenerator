@@ -235,13 +235,18 @@ public class GUI {
     @SuppressWarnings("unused")
     public static void showWarningMessageDialog(Component component, String title, String msg) {
         viewManager.showMessageDialog(component, msg, String.join(" - ", Config.PLUGIN_NAME, title),
-                JOptionPane.WARNING_MESSAGE, getImageIcon());
+                JOptionPane.WARNING_MESSAGE, getWarningImageIcon());
     }
 
     @SuppressWarnings("unused")
     public static void showErrorMessageDialog(Component component, String title, String msg) {
         viewManager.showMessageDialog(component, msg, String.join(" - ", Config.PLUGIN_NAME, title),
                 JOptionPane.ERROR_MESSAGE, getImageIcon());
+    }
+
+    public static ImageIcon getWarningImageIcon() {
+        String discoverImagePath = String.join(File.separator, Config.ICONS_PATH, "CodeGeneratorWarning.png");
+        return GUI.loadImage(discoverImagePath, "warning icon", 0.1f);
     }
 
     public static ImageIcon getImageIcon() {

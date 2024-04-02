@@ -302,7 +302,6 @@ public class Parser {
             else
                 start = 1;
 
-            viewManager.showMessage(iClass.getName() +": "+ contextAddress, TAG);
         }
         else {
             start = 0;
@@ -593,12 +592,12 @@ public class Parser {
         String aggregationKind = association.getModelPropertyByName("aggregationKind").getValueAsString();
 
         if(aggregationKind.compareTo("Shared") == 0)
-            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + "Aggregation relation between " + from.getName() + " and " + to.getName() + " is treated as association");
+            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> Aggregation relation between " + from.getName() + " and " + to.getName() + " is treated as association");
         else if(aggregationKind.compareTo("Composited") == 0)
-            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + "Composition relation between " + from.getName() + " and " + to.getName() + " is treated as association");
+            logger.queueWarningMessage("Parsing " + iClass.getName() + "-> Composition relation between " + from.getName() + " and " + to.getName() + " is treated as association");
 
         if(toMultiplicity.compareTo("Unspecified") == 0){
-            logger.queueErrorMessage("Parsing " + iClass.getName() + "-> " + "has no multiplicity specified for " + to.getName());
+            logger.queueErrorMessage("Parsing " + iClass.getName() + "-> has no multiplicity specified for " + to.getName());
             return null;
         }
 
@@ -612,7 +611,7 @@ public class Parser {
         ArrayList<String> imports = new ArrayList<>();
 
         if(toMultiplicity.compareTo("0") == 0)
-            return null;
+            return  new Attribute(null, null, null, null, new ArrayList<>());
 
         if(FormatUtils.isArrayList(toMultiplicity)){
             String typeList = "ArrayList";
@@ -743,7 +742,7 @@ public class Parser {
             IModelElement parent = modelElement.getParent();
 
             if((parent instanceof IModel && (shapeUIModel.getParent() == null)) && (handled++ == 1))
-                GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined.");
+                GUI.showWarningMessageDialog(viewManager.getRootFrame(), TAG, "Default package is not defined. Can cause errors with import");
 
 
             if(modelElement instanceof IPackage){
