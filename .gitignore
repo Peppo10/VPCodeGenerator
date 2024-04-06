@@ -1,4 +1,3 @@
-out
+target
 .idea
 CodeGenerator.iml
-.gitignore

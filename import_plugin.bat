@@ -1,3 +1,1 @@
-xcopy plugin.properties out\production\CodeGenerator
-xcopy /e assets out\production\CodeGenerator\assets
-xcopy /e out\production %appdata%\VisualParadigm\plugins
+xcopy /e target\classes %appdata%\VisualParadigm\plugins\codegenerator

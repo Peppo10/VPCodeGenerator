@@ -1,0 +1,41 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Define project metadata -->
+    <groupId>org.codegenerator</groupId>
+    <artifactId>code-generator</artifactId>
+    <version>0.9-beta.2</version>
+
+    <!-- Define project dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>org.openapi</groupId>
+            <artifactId>openapi</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/openapi.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+    <!-- Define build plugins -->
+    <build>
+        <plugins>
+            <!-- Add Maven plugins here -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <contributors>
+        <contributor>
+            <name>Giuseppe Liace</name>
+        </contributor>
+    </contributors>
+</project>

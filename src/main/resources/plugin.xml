@@ -1,0 +1,54 @@
+<plugin
+    id="%plugin.id"
+    name="%plugin.name"
+    description="%plugin.description"
+    provider="%plugin.provider"
+    class="org.codegenerator.CodeGenerator" >
+    <actionSets>
+        <contextSensitiveActionSet id="%actions_context.id">
+            <contextTypes all="false">
+                <include type="Class"/>
+                <include type="Package"/>
+                <include type="ClassDiagram"/>
+            </contextTypes>
+            <menu id="Generate" label="%actions.generate.label" menuPath="OpenSpecification"/>
+            <action
+                    id="contextCodeGenerator"
+                    label="Java"
+                    style="normal"
+                    menuPath="Generate/#">
+                <actionController class="org.codegenerator.GenerateCodeContextActionController"/>
+            </action>
+        </contextSensitiveActionSet>
+        <actionSet id="%actions.id">
+            <menu
+                    id="Toolbar"
+                    label="%actions.toolbar.label"
+                    ribbonPath="Help"
+            />
+            <action
+                    id="CodeGenerator"
+                    actionType="generalAction"
+                    label="%actions.generate.label"
+                    tooltip="%actions.generate.label"
+                    icon="assets/icons/CodeGenerator.png"
+                    style="normal"
+                    ribbonPath="Toolbar/#">
+                <actionController class="org.codegenerator.GenerateCodeActionController" />
+            </action>
+            <separator
+                    id="Separator2"
+                    ribbonPath="Toolbar/CodeGenerator" />
+            <action
+                    id="About"
+                    actionType="generalAction"
+                    label="%actions.about.label"
+                    tooltip="%actions.about.label"
+                    icon="assets/icons/question.png"
+                    style="normal"
+                    ribbonPath="Toolbar/Separator2">
+                <actionController class="org.codegenerator.AboutActionController" />
+            </action>
+        </actionSet>
+</actionSets>
+</plugin>
