@@ -6,7 +6,7 @@
    * Follow the official guide https://www.visual-paradigm.com/support/documents/vpuserguide/124/254/7041_installingpl.html
 
 2. From source code
-   * Compile the source on **IntelliJ IDEA using JDK 11**
+   * run `mvn compile`
    * run `.\import_plugin.bat`
    
 
