@@ -19,6 +19,8 @@ public class FunctionParser{
         this.context = context;
     }
     public Function parseFunction(IOperation function, IClass iClass, Boolean notify){
+        boolean isInterface = iClass.hasStereotype("Interface");
+
         if(function.getReturnTypeAsString() != null){
             if(notify)
                 Logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + function.getVisibility() +" "+ function.getReturnTypeAsString() +" "+ function.getName() + "()");
@@ -29,10 +31,10 @@ public class FunctionParser{
 
             String visibility = function.getVisibility();
 
-            if((function.getVisibility() != null) && notify)
+            if((function.getVisibility() != null) && notify && isInterface)
                 Logger.queueWarningMessage("Parsing " + iClass.getName() + "-> " + function.getName() +" visibility is ignored");
 
-            String formattedVisibility = iClass.hasStereotype("Interface") ? null : visibility;
+            String formattedVisibility = isInterface? null : visibility;
 
             Function.Builder builderFunction = new Function.Builder(function.getName(), formattedVisibility, formattedType);
 

@@ -13,21 +13,22 @@ import org.codegenerator.utils.FormatUtils;
 import org.codegenerator.utils.GUI;
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import static org.codegenerator.parser.Parser.*;
 
 public class ClassParser{
-    private enum ClassType{CLASS,INTERFACE,ENUM}
+    enum ClassType{CLASS,INTERFACE,ENUM}
     private final TemplateParser templateParser = new TemplateParser();
     private final AttributeParser attributeParser;
     private final FunctionParser functionParser;
+    private final RelationParser relationParser;
     private final CGContext context;
 
     public ClassParser(CGContext context) {
         this.context = context;
         this.functionParser = new FunctionParser(context);
         this.attributeParser = new AttributeParser(context);
+        this.relationParser = new RelationParser(context);
     }
 
     public Struct parseClass(IClassUIModel iClassUIModel, String parentPath){
@@ -136,7 +137,7 @@ public class ClassParser{
 
             //inheritance
             for(ISimpleRelationship relationship: simpleRelationshipsFrom){
-                switch ( handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend, context)){
+                switch ( relationParser.handleSimpleRelationshipParsing(relationship,iClass,builder,classType,iClassUIModel,defaultColor,hasExtend, context)){
                     case 1:
                         context.setErrorFlag(true);
                         return null;
@@ -148,74 +149,6 @@ public class ClassParser{
         }
 
         return builder.build();
-    }
-
-    private Integer handleSimpleRelationshipParsing(ISimpleRelationship relationship, IClass iClass, Struct.Builder builder, ClassType classType, IClassUIModel iClassUIModel, Color defaultColor, AtomicBoolean hasExtend, CGContext context){
-        if (relationship instanceof IGeneralization) {
-            IModelElement to = relationship.getTo();
-
-            if (!(to instanceof IClass) || !(to.getAddress().startsWith(context.getPath())))
-                return 2; //should step on next iteration
-
-            builder.addImport(getClassImport(iClass, to.getName(), context));
-
-            if(to.hasStereotype("Interface")){
-                Logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + " implements " + to.getName());
-
-                if(classType == ClassType.INTERFACE)
-                    ((Interface.Builder) builder).addExtends(to.getName());
-                else if (classType == ClassType.CLASS)
-                    ((Class.Builder) builder).addImplements(to.getName());
-                else
-                    ((Enum.Builder) builder).addImplements(to.getName());
-
-                for(IOperation function: ((IClass) to).toOperationArray()){
-                    Function parsedFunction = functionParser.parseFunction(function, iClass, false);
-
-                    if(parsedFunction != null){
-                        parsedFunction.setOverride(true);
-
-                        builder.addFunction(parsedFunction);
-                    }
-                    else{
-                        ICompartmentColorModel attributeColor = iClassUIModel.getCompartmentColorModel(function,true);
-                        attributeColor.setBackground(GUI.defaultError);
-
-                        for(IParameter parameter :function.toParameterArray())
-                            parameter.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
-
-                        function.addPropertyChangeListener(evt -> attributeColor.setBackground(defaultColor));
-                        return 1;
-                    }
-                }
-            }
-            else{
-                if(classType == ClassType.CLASS){
-                    if((!hasExtend.get())){
-                        Logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + " extends " + to.getName());
-
-                        Class extended = new Class.Builder("",null, to.getName()).build();
-
-                        extended.setAttributes(parseExtendAttributes((IClass) to));
-
-                        ((Class.Builder) builder).setExtends(extended);
-                        hasExtend.set(true);
-                    }
-                    else {
-                        GUI.showErrorParsingMessage(iClassUIModel,relationship, iClass.getName() + " cannot extends multiple classes");
-
-                        return 1;
-                    }
-                }
-                else{
-                    GUI.showErrorParsingMessage(iClassUIModel,relationship, iClass.getName() + " cannot extends classes");
-
-                    return 1;
-                }
-            }
-        }
-
-        return 0;
     }
 
     private Boolean handleFunctionParsing(IOperation operation, IClassUIModel iClassUIModel, Struct.Builder builder, ClassType classType, Color defaultColor){
@@ -248,7 +181,7 @@ public class ClassParser{
         if(endRelationship instanceof IAssociation){
             if(getToModelElement(relationship, direction).getAddress().startsWith(context.getPath())){
                 IClass iClass = (IClass) iClassUIModel.getModelElement();
-                Attribute parsedAssociation = attributeParser.parseAssociation(relationship, iClass, direction);
+                Attribute parsedAssociation = relationParser.parseAssociation(relationship, iClass, direction);
 
                 if (parsedAssociation != null)
                     builder.addAttribute(parsedAssociation);
@@ -286,15 +219,5 @@ public class ClassParser{
         }
 
         return true;
-    }
-
-    private ArrayList<Attribute> parseExtendAttributes(IClass aClass){
-        ArrayList<Attribute> attributesList = new ArrayList<>();
-        IAttribute[] attributes = aClass.toAttributeArray();
-
-        for(IAttribute attribute: attributes)
-            attributesList.add(attributeParser.parseAttribute(attribute, aClass, false));
-
-        return attributesList;
     }
 }
