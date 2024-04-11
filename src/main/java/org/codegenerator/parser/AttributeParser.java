@@ -24,7 +24,7 @@ public class AttributeParser{
             return null;
         }
 
-        if(attribute.getTypeAsString() != null) {
+        if((attribute.getTypeAsString() != null) && (!attribute.getTypeAsString().isEmpty())) {
             if(notify)
                 Logger.queueInfoMessage("Parsing " + iClass.getName() + "-> " + attribute.getVisibility()+" "+attribute.getTypeAsString() +" "+ attribute.getName() + ";");
 

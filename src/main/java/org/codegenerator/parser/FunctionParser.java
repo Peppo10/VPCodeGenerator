@@ -44,7 +44,7 @@ public class FunctionParser{
                 builderFunction.addStatement(new Return("null"));
 
             for(IParameter parameter :function.toParameterArray()){
-                if(parameter.getTypeAsText() !=null){
+                if((parameter.getTypeAsText() != null) && (!parameter.getTypeAsText().isEmpty())){
                     String paramFormattedType = FormatUtils.toJavaType(parameter.getTypeAsString());
                     String multiplicity = parameter.getMultiplicity();
                     String attributeType;

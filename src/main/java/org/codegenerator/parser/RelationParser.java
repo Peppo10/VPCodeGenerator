@@ -85,13 +85,13 @@ public class RelationParser {
                         hasExtend.set(true);
                     }
                     else {
-                        GUI.showErrorParsingMessage(iClassUIModel,relationship, iClass.getName() + " cannot extends multiple classes");
+                        GUI.showErrorParsingMessage(iClassUIModel,relationship, "Parsing " + iClass.getName() + "-> " + iClass.getName() + " cannot extends multiple classes");
 
                         return 1;
                     }
                 }
                 else{
-                    GUI.showErrorParsingMessage(iClassUIModel,relationship, iClass.getName() + " cannot extends classes");
+                    GUI.showErrorParsingMessage(iClassUIModel,relationship, "Parsing " + iClass.getName() + "-> " + iClass.getName() + " cannot extends classes");
 
                     return 1;
                 }
