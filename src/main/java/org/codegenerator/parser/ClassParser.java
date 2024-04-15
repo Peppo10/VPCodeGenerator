@@ -112,8 +112,10 @@ public class ClassParser{
                     {
                         Struct parsedInnerClass = parseClass(uiModel, getElementPath(uiModel, context.getCodebase()));
 
-                        if(parsedInnerClass == null)
+                        if(parsedInnerClass == null) {
                             context.setErrorFlag(true);
+                            return null;
+                        }
                         else
                             builder.addInnerClass(parsedInnerClass);
 

@@ -39,15 +39,6 @@ public class Generator {
     private static void generatePackage(Package aPackage){
         if(!new File(aPackage.getPathname()).mkdirs())
             Logger.showMessage(new Message(Message.MessageType.WARNING,"folder "+aPackage.getName()+" was not instanced(maybe already exists)"));
-
-        for(File file: aPackage.getFiles()){
-            try {
-                generateFile(file);
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-        }
-
     }
 
     private static void generateFile(File file) throws IOException {

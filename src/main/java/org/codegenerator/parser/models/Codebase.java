@@ -21,13 +21,15 @@ public class Codebase{
         this.name = name;
     }
     public void addFile(File file){
-        if(!this.files.contains(file))
-            this.files.add(file);
+        this.files.add(file);
     }
 
     public void addPackage(Package aPackage){
-        if(!this.packages.contains(aPackage))
-            this.packages.add(aPackage);
+        this.packages.add(aPackage);
+    }
+
+    public ArrayList<File> getFiles() {
+        return files;
     }
 
     public ArrayList<File> getClasses() {

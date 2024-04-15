@@ -47,7 +47,7 @@ public class Parser {
     }
 
     private Package parsePackage(IPackageUIModel iPackage, String parentPath){
-        Package aPackage = new Package(iPackage.getModelElement().getName(), new ArrayList<>(), parentPath + File.separator + iPackage.getModelElement().getName());
+        Package aPackage = new Package(iPackage.getModelElement().getName(), parentPath + File.separator + iPackage.getModelElement().getName());
 
         for(IShapeUIModel shapeUIModel: iPackage.toChildArray()){
             IModelElement iModelElement = shapeUIModel.getModelElement();
@@ -56,27 +56,29 @@ public class Parser {
                 continue;
 
             if(iModelElement instanceof IClass)
-                aPackage.addFile(classParser.parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
+                context.getCodebase().addFile(classParser.parseClass((IClassUIModel) shapeUIModel, aPackage.getPathname()));
             else if (iModelElement instanceof IPackage)
                 context.getCodebase().addPackage(parsePackage((IPackageUIModel) shapeUIModel, aPackage.getPathname()));
         }
 
-        return aPackage.getFiles().contains(null) ? null : aPackage;
+        viewManager.showMessage(context.getCodebase().getFiles().toString(), TAG);
+
+        return context.getCodebase().getFiles().contains(null) ? null : aPackage;
     }
 
     private Package parseDefaultPackage(IPackage iPackage){
         this.context.setDefaultPackage(iPackage.getName());
 
-        Package aPackage = new Package(iPackage.getName(), new ArrayList<>(), context.getCodebase().getPathname() + File.separator + iPackage.getName());
+        Package aPackage = new Package(iPackage.getName(), context.getCodebase().getPathname() + File.separator + iPackage.getName());
 
         for(IModelElement modelElement: iPackage.toChildArray()){
             if(modelElement instanceof IClass)
-                aPackage.addFile(classParser.parseClass((IClassUIModel) getUIModelFromElement(modelElement, context), aPackage.getPathname()));
+                context.getCodebase().addFile(classParser.parseClass((IClassUIModel) getUIModelFromElement(modelElement, context), aPackage.getPathname()));
             else if (modelElement instanceof IPackage)
                 context.getCodebase().addPackage(parsePackage((IPackageUIModel) getUIModelFromElement(modelElement, context), aPackage.getPathname()));
         }
 
-        return aPackage.getFiles().contains(null) ? null : aPackage;
+        return context.getCodebase().getFiles().contains(null) ? null : aPackage;
     }
 
     public void parseDiagram(IDiagramUIModel iDiagramUIModel){
@@ -129,7 +131,6 @@ public class Parser {
         Logger.consumeQueue();
     }
 
-
     //utils
     private static Package parsePackageBottomUp(IPackageUIModel iPackage, Codebase codebase){
         IDiagramElement parent = iPackage.getParent();
@@ -141,7 +142,7 @@ public class Parser {
 
         String optionalPackagePath = parentPackage != null ? parentPackage.getPathname() : codebase.getPathname();
 
-        return new Package(iPackage.getModelElement().getName(), new ArrayList<>(), optionalPackagePath + File.separator + iPackage.getModelElement().getName());
+        return new Package(iPackage.getModelElement().getName(), optionalPackagePath + File.separator + iPackage.getModelElement().getName());
     }
     public static IModelElement getToModelElement(IRelationshipEnd relationshipEnd, int direction){
         if(direction == IAssociation.DIRECTION_FROM_TO){

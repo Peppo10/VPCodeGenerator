@@ -1,21 +1,12 @@
 package org.codegenerator.parser.models;
 
-import java.io.File;
-import java.util.ArrayList;
-
 public class Package{
-    private ArrayList<File> files;
     private String name;
     private String pathname;
 
-    public Package(String name, ArrayList<File> files, String pathname) {
+    public Package(String name, String pathname) {
         this.name = name;
-        this.files = files;
         this.pathname = pathname;
-    }
-
-    public void addFile(File file){
-        this.files.add(file);
     }
 
     public String getPathname() {
@@ -32,14 +23,6 @@ public class Package{
 
     public void setPathname(String pathname) {
         this.pathname = pathname;
-    }
-
-    public ArrayList<File> getFiles() {
-        return files;
-    }
-
-    public void setFiles(ArrayList<File> files) {
-        this.files = files;
     }
 
     @Override
